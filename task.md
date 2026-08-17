@@ -1,0 +1,9 @@
+- `[x]` Update `INITIAL_HIERARCHY` in `index.html`
+  - `[x]` Configure `DT CREW (D/SIDE)`
+  - `[x]` Configure `DT QUAD (D/SIDE)`
+  - `[x]` Add `DS CREW (D/SIDE)`
+  - `[x]` Add `DS STD (D/SIDE)`
+  - `[x]` Add `KM/KX (HOOD SURROUND)`
+- `[x]` Verify logic matches `소재준비` variants `(A)`, `(C)`, `(D)` to show Prep Card
+- `[x]` Deploy changes to server
+- `[x]` Verify layout and flow
