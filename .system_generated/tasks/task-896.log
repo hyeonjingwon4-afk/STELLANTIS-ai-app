@@ -1,0 +1,8 @@
+
+index.html:956:      this._goStep(container, 2);
+index.html:959:    container.querySelector('#btn-step2-back').addEventListener('click', () => this._goStep(container, 1
+));
+index.html:962:      this._goStep(container, 3);
+index.html:1008:  _goStep(container, step) {
+
+

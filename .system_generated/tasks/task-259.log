@@ -1,0 +1,29 @@
+=== Port Scan ===
+Port 21 : CLOSED
+Port 22 : CLOSED
+Port 990 : CLOSED
+Port 2121 : CLOSED
+
+=== curl SFTP Upload Test ===
+curl.exe : curl: (1) Protocol "sftp" not supported
+�ġ C:\Users\visitor\.gemini\antigravity\scratch\auto-parts-management-app\ftp_debug.ps1:30 �:1
++ curl.exe --insecure --user "${u}:${p}" -T $local "sftp://${host_name} ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (curl: (1) Protocol "sftp" not supported:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+=== curl FTP Upload Test (port 21) ===
+curl.exe :   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+�ġ C:\Users\visitor\.gemini\antigravity\scratch\auto-parts-management-app\ftp_debug.ps1:34 �:1
++ curl.exe --ftp-pasv --user "${u}:${p}" -T $local "ftp://${host_name}/ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (  % Total    % ...  Time  Current:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+curl: (7) Failed to connect to k5604.dothome.co.kr port 21 after 2111 ms: Could not connect to server

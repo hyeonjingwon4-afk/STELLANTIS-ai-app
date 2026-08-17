@@ -1,0 +1,20 @@
+# 닷홈(Dothome) 아파치 웹서버 설정 파일 (.htaccess)
+Options -Indexes
+DirectoryIndex index.html
+
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType text/css .css
+    AddType text/html .html
+    AddType application/json .json
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# 새 탭 방지: 동일 출처 내 탐색 강제
+<IfModule mod_headers.c>
+    Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>

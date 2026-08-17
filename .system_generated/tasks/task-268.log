@@ -1,0 +1,25 @@
+=== Port Scan on 112.175.185.132 ===
+Port 21 : OPEN
+Port 22 : CLOSED
+Port 80 : OPEN
+Port 443 : OPEN
+Port 2222 : CLOSED
+Port 8080 : CLOSED
+Port 8022 : CLOSED
+
+=== curl FTP test to IP directly ===
+curl.exe :   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+�ġ C:\Users\visitor\.gemini\antigravity\scratch\auto-parts-management-app\ftp_debug.ps1:28 �:1
++ curl.exe --ftp-pasv --user "${u}:${p}" "ftp://$ip/" --connect-timeout ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (  % Total    % ...  Time  Current:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+drwx-----x   2 kwonhj159 hosting      4096 Oct 21  2025 html
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100    62    0    62    0     0    104      0 --:--:-- --:--:-- --:--:--   104
+
+=== SSH test ===
+SSH result: ssh: connect to host 112.175.185.132 port 22: Connection timed out

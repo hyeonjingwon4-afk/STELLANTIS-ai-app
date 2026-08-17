@@ -1,0 +1,9 @@
+HTTP Server listening on http://localhost:8080/
+"3"� �μ� �ִ� "Write"�(�) ȣ�ϴ� � �ܰ� �߻�߽�ϴ�. "�Ʈ� � �Ʈ� � Content-Length �Ʈ
+ ũ�⸦ �ʰ�մϴ�."
+�ġ C:\Users\visitor\.gemini\antigravity\scratch\auto-parts-management-app\server.ps1:35 �:13
++             $response.OutputStream.Write($bytes, 0, $bytes.Length)
++             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [], MethodInvocationException
+    + FullyQualifiedErrorId : ProtocolViolationException
+ 

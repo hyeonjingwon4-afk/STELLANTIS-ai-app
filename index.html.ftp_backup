@@ -1,0 +1,2946 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <base target="_self" />
+  <title>스텔란티스 생산 현장 작업 & 인원 관리 시스템</title>
+  
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+    :root {
+      --bg-main: #0f172a;
+      --bg-card: #1e293b;
+      --bg-input: #0f172a;
+      --border-color: #334155;
+      --border-focus: #3b82f6;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #3b82f6;
+      --accent-blue-hover: #2563eb;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #ef4444;
+      --accent-purple: #8b5cf6;
+      --glass-bg: rgba(30, 41, 59, 0.85);
+      --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-full: 9999px;
+      --font-family: 'Noto Sans KR', -apple-system, sans-serif;
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-family); background: var(--bg-main); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; line-height: 1.6; letter-spacing: -0.01em; }
+    #app { display: flex; flex-direction: column; min-height: 100vh; }
+
+    .top-navbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.85rem 1.5rem; background: var(--glass-bg); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100;
+    }
+    .brand-container { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-logo {
+      width: 38px; height: 38px; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 1.2rem; box-shadow: 0 4px 12px rgba(59,130,246,0.4);
+    }
+    .brand-title h1 { font-size: 1.05rem; font-weight: 800; color: #ffffff; }
+    .brand-title span { font-size: 0.75rem; color: #60a5fa; font-weight: 600; }
+
+    .mode-switcher { display: flex; background: rgba(15,23,42,0.8); padding: 3px; border-radius: var(--radius-full); border: 1px solid var(--border-color); }
+    .mode-btn {
+      padding: 0.45rem 1.1rem; border: none; background: transparent;
+      color: var(--text-secondary); font-weight: 600; font-size: 0.85rem;
+      border-radius: var(--radius-full); cursor: pointer; transition: var(--transition);
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .mode-btn.active { background: var(--accent-blue); color: white; box-shadow: 0 2px 8px rgba(59,130,246,0.5); }
+    .mode-btn:hover:not(.active) { color: var(--text-primary); }
+
+    .main-wrapper { flex: 1; padding: 1.5rem; max-width: 1600px; width: 100%; margin: 0 auto; }
+    .view-section { display: none; animation: fadeIn 0.3s ease; }
+    .view-section.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+
+    @media (max-width: 1024px) { .grid-4 { grid-template-columns: 1fr 1fr; } .grid-3 { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .main-wrapper { padding: 0.4rem; }
+      .card { padding: 0.75rem; margin-bottom: 0.5rem; }
+      .top-navbar { padding: 0.5rem 0.75rem; }
+      .card-title { font-size: 0.9rem; }
+      body { font-size: 0.85rem; line-height: 1.35; }
+      .btn { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+      .form-control, .form-select { padding: 0.45rem 0.6rem; font-size: 0.8rem; }
+      .form-label { margin-bottom: 0.2rem; font-size: 0.75rem; }
+      .form-group { margin-bottom: 0.6rem; }
+      .mode-btn { padding: 0.35rem 0.6rem; font-size: 0.75rem; }
+      .brand-title h1 { font-size: 0.9rem; }
+      .brand-title span { font-size: 0.65rem; }
+    }
+    .mb-1 { margin-bottom: 0.4rem !important; } .mb-2 { margin-bottom: 0.75rem !important; }
+    .mb-3 { margin-bottom: 1.25rem !important; } .mb-4 { margin-bottom: 2rem !important; }
+    .mt-2 { margin-top: 0.75rem !important; } .mt-3 { margin-top: 1.25rem !important; }
+    .text-center { text-align: center !important; }
+
+    .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.35rem; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .card-title { font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: #ffffff; }
+    .card-title i { color: var(--accent-blue); }
+
+    .kpi-card { display: flex; align-items: center; gap: 1.2rem; padding: 1.2rem 1.4rem; background: linear-gradient(145deg,#1e293b,#172033); border: 1px solid var(--border-color); border-radius: var(--radius-md); position: relative; overflow: hidden; }
+    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent-blue); }
+    .kpi-card.emerald::before { background: var(--accent-emerald); }
+    .kpi-card.amber::before { background: var(--accent-amber); }
+    .kpi-card.rose::before { background: var(--accent-rose); }
+    .kpi-icon { width: 48px; height: 48px; border-radius: var(--radius-md); background: rgba(59,130,246,0.15); color: var(--accent-blue); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+    .kpi-card.emerald .kpi-icon { background: rgba(16,185,129,0.15); color: var(--accent-emerald); }
+    .kpi-card.amber .kpi-icon { background: rgba(245,158,11,0.15); color: var(--accent-amber); }
+    .kpi-card.rose .kpi-icon { background: rgba(239,68,68,0.15); color: var(--accent-rose); }
+
+    .kpi-val { font-size: 1.6rem; font-weight: 900; line-height: 1.2; color: #ffffff; }
+    .kpi-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.1rem; }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-label { display: block; font-size: 0.85rem; font-weight: 600; color: #e2e8f0; margin-bottom: 0.4rem; }
+    .form-control, .form-select {
+      width: 100%; padding: 0.65rem 0.9rem; background: var(--bg-input); border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.9rem; font-family: var(--font-family);
+      transition: var(--transition);
+    }
+    .form-control:focus, .form-select:focus { outline: none; border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(59,130,246,0.25); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.65rem 1.25rem; font-size: 0.9rem; font-weight: 700; border-radius: var(--radius-sm);
+      border: none; cursor: pointer; transition: var(--transition); text-decoration: none;
+    }
+    .btn-primary { background: var(--accent-blue); color: white; }
+    .btn-primary:hover { background: var(--accent-blue-hover); box-shadow: 0 4px 12px rgba(59,130,246,0.35); }
+    .btn-secondary { background: #334155; color: var(--text-primary); }
+    .btn-secondary:hover { background: #475569; }
+    .btn-emerald { background: var(--accent-emerald); color: white; }
+    .btn-emerald:hover { background: #059669; }
+    .btn-rose { background: var(--accent-rose); color: white; }
+    .btn-rose:hover { background: #dc2626; }
+    .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
+    .btn-outline:hover { background: rgba(255,255,255,0.05); }
+    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+    .btn-block { width: 100%; }
+
+    .badge { display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 700; }
+    .badge-blue { background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+    .badge-emerald { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-amber { background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+    .badge-rose { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-purple { background: rgba(139,92,246,0.2); color: #c084fc; border: 1px solid rgba(139,92,246,0.3); }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table th, .data-table td { padding: 0.75rem 0.9rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .data-table th { background: rgba(15,23,42,0.6); color: #cbd5e1; font-weight: 700; font-size: 0.8rem; }
+    .data-table th.sortable { cursor: pointer; user-select: none; transition: background 0.2s; }
+    .data-table th.sortable:hover { background: rgba(255, 255, 255, 0.05); }
+    .data-table th.sortable i { font-size: 0.85rem; margin-left: 2px; color: #64748b; }
+    .data-table th.sortable.active { color: #60a5fa; }
+    .data-table th.sortable.active i { color: #60a5fa; }
+    .data-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    .modal-backdrop {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(15,23,42,0.85); backdrop-filter: blur(8px); z-index: 1000;
+      display: none; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-container {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg); width: 100%; max-width: 600px;
+      max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg);
+      animation: modalUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .modal-container.modal-lg { max-width: 1240px; width: 94vw; }
+    @keyframes modalUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border-color); }
+    .modal-title { font-size: 1.1rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 0.5rem; }
+    .modal-body { padding: 1.5rem; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+    .custom-checkbox-card {
+      display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem;
+      background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+      cursor: pointer; transition: var(--transition); user-select: none; margin-bottom: 0.5rem;
+    }
+    .custom-checkbox-card:hover { border-color: var(--accent-blue); }
+    .custom-checkbox-card input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent-blue); cursor: pointer; }
+    .custom-checkbox-card span { font-size: 0.88rem; font-weight: 500; }
+
+    .downtime-emergency-card {
+      border: 2px solid var(--accent-rose) !important;
+      background: rgba(239, 68, 68, 0.08) !important;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+    }
+
+    .step-pills { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .step-pill { flex: 1; text-align: center; padding: 0.6rem; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+    .step-pill.active { background: rgba(59,130,246,0.15); border-color: var(--accent-blue); color: var(--accent-blue); }
+    .step-pill.done { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: var(--accent-emerald); }
+
+    .clip-spec-box { background: rgba(15,23,42,0.9); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1rem; }
+    .clip-sub-card { background: rgba(30,41,59,0.6); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1rem; }
+    
+    .clip-line-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .clip-line-tab { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-weight: 600; font-size: 0.85rem; }
+    .clip-line-tab:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+    .clip-line-tab.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); box-shadow: 0 2px 8px rgba(59,130,246,0.4); }
+    .prep-tab-btn.active { background: var(--accent-emerald); color: white; border-color: var(--accent-emerald); box-shadow: 0 2px 8px rgba(16,185,129,0.4); font-weight: 800; transform: scale(1.02); }
+    .floating-log-btn {
+      position: fixed; bottom: 1.5rem; left: 1.5rem; background: var(--accent-blue); color: white;
+      border: none; border-radius: 50px; padding: 0.75rem 1.25rem; font-weight: 700;
+      box-shadow: 0 4px 12px rgba(59,130,246,0.4); z-index: 1000; display: none;
+      align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.2s ease;
+    }
+    .floating-log-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(59,130,246,0.5); }
+    .floating-log-btn.visible { display: flex; }
+    .log-popup-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.6);
+      z-index: 1001; display: none; align-items: flex-end; justify-content: flex-start; backdrop-filter: blur(4px);
+    }
+    .log-popup-overlay.active { display: flex; }
+    .log-popup-panel {
+      background: var(--surface); width: 100%; max-width: 400px; height: 80vh; max-height: 600px;
+      border-radius: 20px 20px 0 0; box-shadow: 0 -10px 25px rgba(0,0,0,0.15); display: flex;
+      flex-direction: column; animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    @media (min-width: 768px) {
+      .log-popup-overlay { align-items: flex-end; padding: 1.5rem; }
+      .log-popup-panel { height: auto; max-height: 70vh; border-radius: 16px; }
+    }
+    .log-popup-header { padding: 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .log-popup-body { padding: 1rem; flex: 1; overflow-y: auto; }
+    .log-popup-item {
+      padding: 1rem; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 0.75rem;
+      cursor: pointer; transition: all 0.2s; background: var(--bg-card);
+    }
+    .log-popup-item:hover { border-color: var(--accent-blue); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .log-popup-item.active-item { border-color: var(--accent-blue); border-left: 4px solid var(--accent-blue); background: rgba(59,130,246,0.15); }
+    .log-popup-footer { padding: 1rem; border-top: 1px solid var(--border-color); }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <nav class="top-navbar">
+      <div class="brand-container">
+        <div class="brand-logo"><i class="ri-settings-5-fill"></i></div>
+        <div class="brand-title">
+          <h1>스텔란티스 생산 현장 작업일지</h1>
+          <span>DT CREW / DT QUAD 라인 통합 관리</span>
+        </div>
+      </div>
+      <div class="mode-switcher">
+        <button type="button" class="mode-btn active" id="btn-mode-worker"><i class="ri-user-3-line"></i> 근로자 작성</button>
+        <button type="button" class="mode-btn" id="btn-mode-manager"><i class="ri-dashboard-3-line"></i> 관리자 대시보드</button>
+      </div>
+    </nav>
+
+    <main class="main-wrapper">
+      <section id="view-worker" class="view-section active">
+        <div style="max-width:840px;margin:0 auto;">
+          <div class="card mb-3" style="background:linear-gradient(135deg,#1e293b,#0f172a);border-left:4px solid #3b82f6;color:#ffffff;box-shadow:0 4px 14px rgba(15,23,42,0.12);">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+              <div>
+                <span class="badge badge-blue mb-1" style="background:#3b82f6;color:#ffffff;border:none;font-weight:700;">모바일 최적화 일지</span>
+                <h2 style="font-size:1.35rem;font-weight:900;color:#ffffff;margin-top:0.25rem;">스텔란티스 생산 일지 작성</h2>
+              </div>
+              <span class="badge badge-purple" style="font-size:0.85rem;padding:0.3rem 0.75rem;">DT CREW/QUAD D/SIDE</span>
+            </div>
+          </div>
+
+          <div class="step-pills">
+            <div class="step-pill active" id="pill-1">1. 본인 확인</div>
+            <div class="step-pill" id="pill-2">2. 공정 선택</div>
+            <div class="step-pill" id="pill-3">3. 일지 작성</div>
+          </div>
+
+          <div id="step1" class="card mb-3">
+            <div class="card-header">
+              <div class="card-title"><i class="ri-user-check-line"></i> 1. 근로자 본인 확인</div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">작업자 성명 *</label>
+                <input type="text" class="form-control" id="w-name" placeholder="성함 입력 (예: 홍길동)" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">생년월일 (6자리) *</label>
+                <input type="text" class="form-control" id="w-birth" placeholder="YYMMDD (예: 920514)" maxlength="6" />
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-block" id="btn-step1-next">다음 단계로 (공정 선택) <i class="ri-arrow-right-line"></i></button>
+          </div>
+
+          <div id="step2" class="card mb-3" style="display:none;">
+            <div class="card-header">
+              <div class="card-title"><i class="ri-git-merge-line"></i> 2. 담당 차종 &amp; 공정 선택</div>
+              <button type="button" class="btn btn-outline btn-sm" id="btn-step2-back"><i class="ri-arrow-left-line"></i> 이전</button>
+            </div>
+            <div class="grid-3 mb-2">
+              <div class="form-group">
+                <label class="form-label">제조사</label>
+                <select class="form-select" id="w-mfg"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">차종 모델</label>
+                <select class="form-select" id="w-model"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">부품명</label>
+                <select class="form-select" id="w-part"></select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">담당 공정 *</label>
+              <select class="form-select" id="w-proc"></select>
+            </div>
+            <button type="button" class="btn btn-primary btn-block" id="btn-step2-next">일지 작성 시작하기 <i class="ri-edit-line"></i></button>
+          </div>
+
+          <div id="step3" style="display:none;">
+            <div class="card mb-3">
+              <div class="card-header">
+                <div class="card-title" id="prework-title"><i class="ri-shield-check-line"></i> 1. 작업 시작 전 점검 일지</div>
+                <span class="badge badge-amber" id="prework-status-badge">미완료</span>
+              </div>
+              <div id="checklist-container" class="mb-3"></div>
+              <button type="button" class="btn btn-emerald btn-block" id="btn-prework-submit"><i class="ri-check-double-line"></i> 점검 완료 및 근무 시작 기록</button>
+            </div>
+
+            <div id="clip-spec-card" class="card mb-3" style="display:none;">
+              <div class="card-header">
+                <div class="card-title" style="color:var(--accent-purple);"><i class="ri-tools-line"></i> 클립머신 준비 작업일보 서식</div>
+                <span class="badge badge-purple">DT CREW/QUAD D/SIDE</span>
+              </div>
+
+              <div class="clip-line-tabs">
+                <div class="clip-line-tab active" data-cline="1호기">1호기 일지</div>
+                <div class="clip-line-tab" data-cline="2호기">2호기 일지</div>
+                <div class="clip-line-tab" data-cline="3호기">3호기 일지</div>
+                <div class="clip-line-tab" data-cline="4호기">4호기 일지</div>
+              </div>
+
+              <div class="clip-spec-box">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+                  <strong id="clip-active-line-title" style="color:#ffffff;font-size:1.05rem;"><i class="ri-cpu-line"></i> [ 1호기 일지 작성 ]</strong>
+                  <span class="badge badge-blue" id="clip-active-line-badge">1호기 전용 생산품목</span>
+                </div>
+                
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label class="form-label">① 생산 품목 선택</label>
+                    <select class="form-select" id="clip-single-item-sel"></select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">② 작업시간</label>
+                    <div style="display:flex;align-items:center;gap:0.3rem;">
+                      <input type="time" class="form-control" id="clip-single-t-start" value="08:00" />
+                      <span>~</span>
+                      <input type="time" class="form-control" id="clip-single-t-end" value="17:00" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="clip-sub-card">
+                  <label class="form-label mb-1">③ 압출소재 (LOT No.)</label>
+                  <div class="grid-3">
+                    <input type="text" class="form-control" id="clip-single-lot-init" placeholder="초물 LOT No." />
+                    <input type="text" class="form-control" id="clip-single-lot-mid" placeholder="중물 LOT No." />
+                    <input type="text" class="form-control" id="clip-single-lot-fin" placeholder="종물 LOT No." />
+                  </div>
+                </div>
+
+                <div class="clip-sub-card">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.3rem;">
+                    <label class="form-label mb-0">📐 ④ 치수 확인</label>
+                    <span class="badge badge-purple" id="clip-single-spec-tag">기준값 표기</span>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>구분</th>
+                          <th>전장길이 (mm)</th>
+                          <th>끝단 클립 간격 (시작/끝) (mm)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr><td><strong>초물</strong></td><td><input type="number" step="0.1" class="form-control" id="dim-single-init-len" placeholder="전장" /></td><td><input type="number" step="0.1" class="form-control" id="dim-single-init-gap" placeholder="끝단 클립 간격" /></td></tr>
+                        <tr><td><strong>중물</strong></td><td><input type="number" step="0.1" class="form-control" id="dim-single-mid-len" placeholder="전장" /></td><td><input type="number" step="0.1" class="form-control" id="dim-single-mid-gap" placeholder="끝단 클립 간격" /></td></tr>
+                        <tr><td><strong>종물</strong></td><td><input type="number" step="0.1" class="form-control" id="dim-single-fin-len" placeholder="전장" /></td><td><input type="number" step="0.1" class="form-control" id="dim-single-fin-gap" placeholder="끝단 클립 간격" /></td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="clip-sub-card">
+                  <label class="form-label mb-1">🗑️ ⑤ 소재 LOSS &amp; 폐기 불량</label>
+                  <div class="grid-2 mb-2">
+                    <div><label class="form-label" style="font-size:0.78rem;">소재연결작업 LOSS (EA)</label><input type="number" class="form-control" id="clip-single-loss-join" min="0" value="0" /></div>
+                    <div><label class="form-label" style="font-size:0.78rem;">소재불량 LOSS (EA)</label><input type="number" class="form-control" id="clip-single-loss-defect" min="0" value="0" /></div>
+                  </div>
+                  <div class="grid-2">
+                    <div>
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+                        <label class="form-label mb-0" style="font-size:0.78rem;">폐기불량 세부내용 (선택)</label>
+                        <span class="badge badge-blue" style="font-size:0.68rem;padding:0.1rem 0.35rem;" title="작성 누적에 따라 다빈도 불량이 상단에 자동 정렬됩니다.">🔥 다빈도 상단정렬</span>
+                      </div>
+                      <select class="form-select" id="clip-single-waste-type" style="margin-bottom:0.35rem;"></select>
+                      <input type="text" class="form-control" id="clip-single-waste-etc" placeholder="기타 세부 사유 입력" style="display:none;" />
+                    </div>
+                    <div><label class="form-label" style="font-size:0.78rem;color:var(--accent-rose);font-weight:700;">폐기불량 합계 (EA)</label><input type="number" class="form-control" id="clip-single-waste-total" min="0" value="0" style="color:var(--accent-rose);font-weight:700;" /></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="prep-spec-card" class="card mb-3" style="display:none;">
+              <div class="card-header">
+                <div class="card-title" style="color:var(--accent-emerald);"><i class="ri-ruler-2-line"></i> 소재준비 공정 작업일보 서식</div>
+                <span class="badge badge-emerald">DT CREW/QUAD</span>
+              </div>
+              <div class="card-body" style="padding:1rem;">
+                <div style="display:flex;gap:0.5rem;margin-bottom:1rem;border-bottom:1px solid var(--border-color);padding-bottom:0.5rem;">
+                  <button type="button" class="btn btn-outline btn-sm prep-tab-btn active" data-side="LH" style="flex:1;">LH 작성란</button>
+                  <button type="button" class="btn btn-outline btn-sm prep-tab-btn" data-side="RH" style="flex:1;">RH 작성란</button>
+                </div>
+
+                <div id="prep-tab-content-LH" class="prep-tab-content">
+                  <div class="clip-sub-card">
+                    <label class="form-label mb-1">📦 ① 압출 소재 (LH)</label>
+                    <div class="grid-3 mb-2">
+                      <div><label class="form-label" style="font-size:0.78rem;">초물 LOT No.</label><input type="text" class="form-control" id="prep-LH-lot-init" placeholder="초물 LOT" /></div>
+                      <div><label class="form-label" style="font-size:0.78rem;">중물 LOT No.</label><input type="text" class="form-control" id="prep-LH-lot-mid" placeholder="중물 LOT" /></div>
+                      <div><label class="form-label" style="font-size:0.78rem;">종물 LOT No.</label><input type="text" class="form-control" id="prep-LH-lot-fin" placeholder="종물 LOT" /></div>
+                    </div>
+                  </div>
+
+                  <div class="clip-sub-card">
+                    <label class="form-label mb-1">📏 ② 좌우 클립간격 길이측정 (LH)</label>
+                    <div class="table-responsive">
+                      <table class="data-table" style="font-size:0.85rem;min-width:500px;">
+                        <thead>
+                          <tr><th>구분</th><th>초물</th><th>중물</th><th>종물</th><th>기준값</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td style="font-weight:700;">전장</td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-LH-dim-1-1" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-LH-dim-1-2" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-LH-dim-1-3" /></td>
+                            <td class="prep-spec-len">779±5</td>
+                          </tr>
+                          <tr>
+                            <td style="font-weight:700;">둔각 끝단 클립간격</td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-LH-dim-2-1" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-LH-dim-2-2" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-LH-dim-2-3" /></td>
+                            <td>28±1</td>
+                          </tr>
+                          <tr>
+                            <td style="font-weight:700;">직각 끝단 클립간격</td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-LH-dim-3-1" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-LH-dim-3-2" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-LH-dim-3-3" /></td>
+                            <td>28±1</td>
+                          </tr>
+                          <tr>
+                            <td style="font-weight:700;">단컷팅</td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-LH-dim-4-1" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-LH-dim-4-2" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-LH-dim-4-3" /></td>
+                            <td>93±0.5</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div class="clip-sub-card">
+                    <label class="form-label mb-1">⚠️ ③ 불량 기록 (LH)</label>
+                    <div class="grid-2 mb-2">
+                      <div>
+                        <strong style="display:block;font-size:0.85rem;margin-bottom:0.5rem;color:var(--accent-amber);">압출소재 불량</strong>
+                        <div style="display:flex;gap:0.25rem;">
+                          <div style="flex:1;"><label class="form-label" style="font-size:0.75rem;">스코치</label><input type="number" class="form-control prep-LH-def" id="prep-LH-def-ext-1" min="0" value="0"/></div>
+                          <div style="flex:1;"><label class="form-label" style="font-size:0.75rem;">외면오염</label><input type="number" class="form-control prep-LH-def" id="prep-LH-def-ext-2" min="0" value="0"/></div>
+                          <div style="flex:1;"><label class="form-label" style="font-size:0.75rem;">기타</label><input type="number" class="form-control prep-LH-def" id="prep-LH-def-ext-3" min="0" value="0"/></div>
+                        </div>
+                      </div>
+                      <div>
+                        <strong style="display:block;font-size:0.85rem;margin-bottom:0.5rem;color:var(--accent-amber);">공정간 불량</strong>
+                        <div style="display:flex;gap:0.25rem;">
+                          <div style="flex:1;"><label class="form-label" style="font-size:0.75rem;">길이</label><input type="number" class="form-control prep-LH-def" id="prep-LH-def-prc-1" min="0" value="0"/></div>
+                          <div style="flex:1;"><label class="form-label" style="font-size:0.75rem;">단면</label><input type="number" class="form-control prep-LH-def" id="prep-LH-def-prc-2" min="0" value="0"/></div>
+                          <div style="flex:1;"><label class="form-label" style="font-size:0.75rem;">기타</label><input type="number" class="form-control prep-LH-def" id="prep-LH-def-prc-3" min="0" value="0"/></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div style="text-align:right;">
+                      <label class="form-label" style="font-size:0.85rem;display:inline-block;margin-right:0.5rem;">불량 합계(EA)</label>
+                      <input type="number" class="form-control" id="prep-LH-def-total" readonly style="width:100px;display:inline-block;color:var(--accent-rose);font-weight:700;" value="0" />
+                    </div>
+                  </div>
+                </div>
+                
+                <div id="prep-tab-content-RH" class="prep-tab-content" style="display:none;">
+                  <div class="clip-sub-card">
+                    <label class="form-label mb-1">📦 ① 압출 소재 (RH)</label>
+                    <div class="grid-3 mb-2">
+                      <div><label class="form-label" style="font-size:0.78rem;">초물 LOT No.</label><input type="text" class="form-control" id="prep-RH-lot-init" placeholder="초물 LOT" /></div>
+                      <div><label class="form-label" style="font-size:0.78rem;">중물 LOT No.</label><input type="text" class="form-control" id="prep-RH-lot-mid" placeholder="중물 LOT" /></div>
+                      <div><label class="form-label" style="font-size:0.78rem;">종물 LOT No.</label><input type="text" class="form-control" id="prep-RH-lot-fin" placeholder="종물 LOT" /></div>
+                    </div>
+                  </div>
+
+                  <div class="clip-sub-card">
+                    <label class="form-label mb-1">📏 ② 좌우 클립간격 길이측정 (RH)</label>
+                    <div class="table-responsive">
+                      <table class="data-table" style="font-size:0.85rem;min-width:500px;">
+                        <thead>
+                          <tr><th>구분</th><th>초물</th><th>중물</th><th>종물</th><th>기준값</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td style="font-weight:700;">전장</td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-RH-dim-1-1" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-RH-dim-1-2" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-RH-dim-1-3" /></td>
+                            <td class="prep-spec-len">779±5</td>
+                          </tr>
+                          <tr>
+                            <td style="font-weight:700;">둔각 끝단 클립간격</td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-RH-dim-2-1" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-RH-dim-2-2" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-RH-dim-2-3" /></td>
+                            <td>28±1</td>
+                          </tr>
+                          <tr>
+                            <td style="font-weight:700;">직각 끝단 클립간격</td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-RH-dim-3-1" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-RH-dim-3-2" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-RH-dim-3-3" /></td>
+                            <td>28±1</td>
+                          </tr>
+                          <tr>
+                            <td style="font-weight:700;">단컷팅</td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-RH-dim-4-1" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-RH-dim-4-2" /></td>
+                            <td><input type="number" step="0.1" class="form-control" id="prep-RH-dim-4-3" /></td>
+                            <td>93±0.5</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div class="clip-sub-card">
+                    <label class="form-label mb-1">⚠️ ③ 불량 기록 (RH)</label>
+                    <div class="grid-2 mb-2">
+                      <div>
+                        <strong style="display:block;font-size:0.85rem;margin-bottom:0.5rem;color:var(--accent-amber);">압출소재 불량</strong>
+                        <div style="display:flex;gap:0.25rem;">
+                          <div style="flex:1;"><label class="form-label" style="font-size:0.75rem;">스코치</label><input type="number" class="form-control prep-RH-def" id="prep-RH-def-ext-1" min="0" value="0"/></div>
+                          <div style="flex:1;"><label class="form-label" style="font-size:0.75rem;">외면오염</label><input type="number" class="form-control prep-RH-def" id="prep-RH-def-ext-2" min="0" value="0"/></div>
+                          <div style="flex:1;"><label class="form-label" style="font-size:0.75rem;">기타</label><input type="number" class="form-control prep-RH-def" id="prep-RH-def-ext-3" min="0" value="0"/></div>
+                        </div>
+                      </div>
+                      <div>
+                        <strong style="display:block;font-size:0.85rem;margin-bottom:0.5rem;color:var(--accent-amber);">공정간 불량</strong>
+                        <div style="display:flex;gap:0.25rem;">
+                          <div style="flex:1;"><label class="form-label" style="font-size:0.75rem;">길이</label><input type="number" class="form-control prep-RH-def" id="prep-RH-def-prc-1" min="0" value="0"/></div>
+                          <div style="flex:1;"><label class="form-label" style="font-size:0.75rem;">단면</label><input type="number" class="form-control prep-RH-def" id="prep-RH-def-prc-2" min="0" value="0"/></div>
+                          <div style="flex:1;"><label class="form-label" style="font-size:0.75rem;">기타</label><input type="number" class="form-control prep-RH-def" id="prep-RH-def-prc-3" min="0" value="0"/></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div style="text-align:right;">
+                      <label class="form-label" style="font-size:0.85rem;display:inline-block;margin-right:0.5rem;">불량 합계(EA)</label>
+                      <input type="number" class="form-control" id="prep-RH-def-total" readonly style="width:100px;display:inline-block;color:var(--accent-rose);font-weight:700;" value="0" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="clip-sub-card mt-3">
+                  <label class="custom-checkbox-card" style="margin-bottom:0;">
+                    <input type="checkbox" id="prep-chk-blade" />
+                    <span style="font-weight:700;"><i class="ri-tools-line"></i> 칼날교환주기 확인 완료</span>
+                  </label>
+                </div>
+              </div>
+                        <div id="joint-spec-card" class="card mb-3" style="display:none;">
+              <div class="card-header" style="background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(245,158,11,0.12));">
+                <div class="card-title" style="color:var(--accent-rose);"><i class="ri-tools-fill"></i> 조인트 공정 작업일보 (FR/RR RH/LH & 1~3대 금형기)</div>
+                <span class="badge badge-rose">가류온도 201±10℃ / 가류시간 90±10초</span>
+              </div>
+              <div class="card-body" style="padding:1rem;">
+                <!-- 1. 기본 설정 및 금형 호기 선택 (1~최대 3대 동시 선택) -->
+                <div class="clip-sub-card">
+                  <label class="form-label mb-2" style="font-weight:700;color:var(--accent-rose);">🔹 1. 부위 선택 & 1~3대 금형 호기 설정 (1호기~6호기 중 선택)</label>
+                  <div class="grid-4 mb-2">
+                    <div>
+                      <label class="form-label" style="font-size:0.8rem;">작업 대상 부위</label>
+                      <select class="form-select" id="joint-part-side">
+                        <option value="FR RH">FR RH</option>
+                        <option value="FR LH">FR LH</option>
+                        <option value="RR RH">RR RH</option>
+                        <option value="RR LH">RR LH</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="form-label" style="font-size:0.8rem;">작업 시간 (시작 ~ 종료)</label>
+                      <div style="display:flex;gap:0.25rem;">
+                        <input type="time" class="form-control" id="joint-work-start" />
+                        <span style="align-self:center;">~</span>
+                        <input type="time" class="form-control" id="joint-work-end" />
+                      </div>
+                    </div>
+                    <div>
+                      <label class="form-label" style="font-size:0.8rem;">계획 생산량 (EA)</label>
+                      <input type="number" class="form-control" id="joint-prod-planned" value="0" min="0" />
+                    </div>
+                    <div>
+                      <label class="form-label" style="font-size:0.8rem;">총 생산량(실적) (EA) *</label>
+                      <input type="number" class="form-control" id="joint-prod-total" value="0" min="0" />
+                    </div>
+                  </div>
+
+                  <!-- 3대 금형 호기 지정 카드 -->
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.75rem;margin-top:0.75rem;">
+                    <!-- 금형기 1 -->
+                    <div style="background:var(--surface);padding:0.75rem;border-radius:10px;border:1px solid var(--border-color);">
+                      <strong style="color:var(--accent-cyan);font-size:0.85rem;display:block;margin-bottom:0.4rem;">금형기 #1</strong>
+                      <div class="form-group mb-1">
+                        <label class="form-label" style="font-size:0.75rem;">금형 호기 (1~6호기)</label>
+                        <select class="form-select joint-mould-num" id="joint-m1-no" style="font-size:0.8rem;">
+                          <option value="1호기">1호기</option>
+                          <option value="2호기">2호기</option>
+                          <option value="3호기">3호기</option>
+                          <option value="4호기">4호기</option>
+                          <option value="5호기">5호기</option>
+                          <option value="6호기">6호기</option>
+                        </select>
+                      </div>
+                      <div class="form-group mb-1">
+                        <label class="form-label" style="font-size:0.75rem;">부위 분류</label>
+                        <select class="form-select" id="joint-m1-pos" style="font-size:0.8rem;">
+                          <option value="직각">직각</option>
+                          <option value="둔각">둔각</option>
+                          <option value="직선">직선</option>
+                          <option value="엔드">엔드</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label" style="font-size:0.75rem;">금형 No. 상세</label>
+                        <input type="text" class="form-control" id="joint-m1-code" placeholder="예: M-01" style="font-size:0.8rem;" />
+                      </div>
+                    </div>
+
+                    <!-- 금형기 2 -->
+                    <div style="background:var(--surface);padding:0.75rem;border-radius:10px;border:1px solid var(--border-color);">
+                      <strong style="color:var(--accent-cyan);font-size:0.85rem;display:block;margin-bottom:0.4rem;">금형기 #2</strong>
+                      <div class="form-group mb-1">
+                        <label class="form-label" style="font-size:0.75rem;">금형 호기 (1~6호기)</label>
+                        <select class="form-select joint-mould-num" id="joint-m2-no" style="font-size:0.8rem;">
+                          <option value="2호기" selected>2호기</option>
+                          <option value="1호기">1호기</option>
+                          <option value="3호기">3호기</option>
+                          <option value="4호기">4호기</option>
+                          <option value="5호기">5호기</option>
+                          <option value="6호기">6호기</option>
+                        </select>
+                      </div>
+                      <div class="form-group mb-1">
+                        <label class="form-label" style="font-size:0.75rem;">부위 분류</label>
+                        <select class="form-select" id="joint-m2-pos" style="font-size:0.8rem;">
+                          <option value="둔각">둔각</option>
+                          <option value="직각">직각</option>
+                          <option value="직선">직선</option>
+                          <option value="엔드">엔드</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label" style="font-size:0.75rem;">금형 No. 상세</label>
+                        <input type="text" class="form-control" id="joint-m2-code" placeholder="예: M-02" style="font-size:0.8rem;" />
+                      </div>
+                    </div>
+
+                    <!-- 금형기 3 -->
+                    <div style="background:var(--surface);padding:0.75rem;border-radius:10px;border:1px solid var(--border-color);">
+                      <strong style="color:var(--accent-cyan);font-size:0.85rem;display:block;margin-bottom:0.4rem;">금형기 #3</strong>
+                      <div class="form-group mb-1">
+                        <label class="form-label" style="font-size:0.75rem;">금형 호기 (1~6호기)</label>
+                        <select class="form-select joint-mould-num" id="joint-m3-no" style="font-size:0.8rem;">
+                          <option value="3호기" selected>3호기</option>
+                          <option value="1호기">1호기</option>
+                          <option value="2호기">2호기</option>
+                          <option value="4호기">4호기</option>
+                          <option value="5호기">5호기</option>
+                          <option value="6호기">6호기</option>
+                        </select>
+                      </div>
+                      <div class="form-group mb-1">
+                        <label class="form-label" style="font-size:0.75rem;">부위 분류</label>
+                        <select class="form-select" id="joint-m3-pos" style="font-size:0.8rem;">
+                          <option value="직선">직선</option>
+                          <option value="직각">직각</option>
+                          <option value="둔각">둔각</option>
+                          <option value="엔드">엔드</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label" style="font-size:0.75rem;">금형 No. 상세</label>
+                        <input type="text" class="form-control" id="joint-m3-code" placeholder="예: M-03" style="font-size:0.8rem;" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. 압출소재 / 부자재 / 고무 LOT 관리 -->
+                <div class="clip-sub-card">
+                  <label class="form-label mb-2" style="font-weight:700;color:var(--accent-cyan);">🔹 2. 압출소재, 부자재 & 고무 LOT No.</label>
+                  
+                  <div style="font-size:0.8rem;font-weight:700;margin-bottom:0.4rem;color:var(--accent-amber);">1) 압출소재 LOT (A LH / B LH / C LH)</div>
+                  <div class="table-responsive mb-2">
+                    <table class="data-table" style="font-size:0.8rem;">
+                      <thead>
+                        <tr><th>소재 구분</th><th>초물 LOT</th><th>중물 LOT</th><th>종물 LOT</th></tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td style="font-weight:700;">A LH</td>
+                          <td><input type="text" class="form-control" id="joint-lot-a-init" placeholder="A LH 초물" /></td>
+                          <td><input type="text" class="form-control" id="joint-lot-a-mid" placeholder="A LH 중물" /></td>
+                          <td><input type="text" class="form-control" id="joint-lot-a-fin" placeholder="A LH 종물" /></td>
+                        </tr>
+                        <tr>
+                          <td style="font-weight:700;">B LH</td>
+                          <td><input type="text" class="form-control" id="joint-lot-b-init" placeholder="B LH 초물" /></td>
+                          <td><input type="text" class="form-control" id="joint-lot-b-mid" placeholder="B LH 중물" /></td>
+                          <td><input type="text" class="form-control" id="joint-lot-b-fin" placeholder="B LH 종물" /></td>
+                        </tr>
+                        <tr>
+                          <td style="font-weight:700;">C LH</td>
+                          <td><input type="text" class="form-control" id="joint-lot-c-init" placeholder="C LH 초물" /></td>
+                          <td><input type="text" class="form-control" id="joint-lot-c-mid" placeholder="C LH 중물" /></td>
+                          <td><input type="text" class="form-control" id="joint-lot-c-fin" placeholder="C LH 종물" /></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div class="grid-2 mb-2">
+                    <div>
+                      <div style="font-size:0.8rem;font-weight:700;margin-bottom:0.4rem;color:var(--accent-amber);">2) 부자재 LOT (DT CREW / DT QUAD)</div>
+                      <div class="grid-2" style="gap:0.25rem;">
+                        <div><label class="form-label" style="font-size:0.75rem;">직각 RH LOT</label><input type="text" class="form-control" id="joint-sub-rh" /></div>
+                        <div><label class="form-label" style="font-size:0.75rem;">직각 LH LOT</label><input type="text" class="form-control" id="joint-sub-lh" /></div>
+                        <div><label class="form-label" style="font-size:0.75rem;">둔각 RH LOT (QUAD)</label><input type="text" class="form-control" id="joint-sub-quad-rh" /></div>
+                        <div><label class="form-label" style="font-size:0.75rem;">둔각 LH LOT (QUAD)</label><input type="text" class="form-control" id="joint-sub-quad-lh" /></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="font-size:0.8rem;font-weight:700;margin-bottom:0.4rem;color:var(--accent-amber);">3) 고무명 & 규격</div>
+                      <div style="background:var(--surface);padding:0.5rem;border-radius:8px;border:1px solid var(--border-color);">
+                        <div style="font-size:0.85rem;font-weight:800;color:var(--accent-emerald);">고무 규격: 60664$OS</div>
+                        <div style="margin-top:0.4rem;">
+                          <label class="form-label" style="font-size:0.75rem;">고무 LOT No.</label>
+                          <input type="text" class="form-control" id="joint-rubber-lot" placeholder="고무 LOT 번호 기입" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. 가류 조건 측정 (온도 201±10℃ / 시간 90±10초) -->
+                <div class="clip-sub-card">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                    <label class="form-label mb-0" style="font-weight:700;color:var(--accent-purple);">🔹 3. 가류 조건 측정 (온도 201±10℃ / 시간 90±10초)</label>
+                    <span class="badge badge-purple" style="font-size:0.75rem;">자동 오차 검증</span>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="data-table" style="font-size:0.8rem;">
+                      <thead>
+                        <tr>
+                          <th rowspan="2">금형기</th>
+                          <th colspan="2">초물 가류온도(℃)</th>
+                          <th>초물시간</th>
+                          <th colspan="2">중물 가류온도(℃)</th>
+                          <th>중물시간</th>
+                          <th colspan="2">종물 가류온도(℃)</th>
+                          <th>종물시간</th>
+                        </tr>
+                        <tr>
+                          <th>상</th><th>하</th><th>(초)</th>
+                          <th>상</th><th>하</th><th>(초)</th>
+                          <th>상</th><th>하</th><th>(초)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <!-- M1 -->
+                        <tr>
+                          <td style="font-weight:700;" id="joint-lbl-m1">#1 (1호기)</td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m1-t1-top" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m1-t1-bot" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-time" id="joint-m1-sec-1" placeholder="90" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m1-t2-top" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m1-t2-bot" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-time" id="joint-m1-sec-2" placeholder="90" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m1-t3-top" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m1-t3-bot" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-time" id="joint-m1-sec-3" placeholder="90" /></td>
+                        </tr>
+                        <!-- M2 -->
+                        <tr>
+                          <td style="font-weight:700;" id="joint-lbl-m2">#2 (2호기)</td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m2-t1-top" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m2-t1-bot" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-time" id="joint-m2-sec-1" placeholder="90" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m2-t2-top" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m2-t2-bot" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-time" id="joint-m2-sec-2" placeholder="90" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m2-t3-top" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m2-t3-bot" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-time" id="joint-m2-sec-3" placeholder="90" /></td>
+                        </tr>
+                        <!-- M3 -->
+                        <tr>
+                          <td style="font-weight:700;" id="joint-lbl-m3">#3 (3호기)</td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m3-t1-top" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m3-t1-bot" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-time" id="joint-m3-sec-1" placeholder="90" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m3-t2-top" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m3-t2-bot" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-time" id="joint-m3-sec-2" placeholder="90" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m3-t3-top" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-temp" id="joint-m3-t3-bot" placeholder="201" /></td>
+                          <td><input type="number" class="form-control joint-time" id="joint-m3-sec-3" placeholder="90" /></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- 4. 폐기불량 현황 Matrix (A / B / C 구분 10종) -->
+                <div class="clip-sub-card">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                    <label class="form-label mb-0" style="font-weight:700;color:var(--accent-amber);">🔹 4. 폐기불량 현황 Matrix (10종 불량 및 자동 합산)</label>
+                    <div>
+                      <span style="font-size:0.8rem;color:var(--text-muted);margin-right:0.5rem;">총 불량 합계:</span>
+                      <input type="number" class="form-control" id="joint-defect-grand-total" readonly style="width:90px;display:inline-block;color:var(--accent-rose);font-weight:800;" value="0" />
+                    </div>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table class="data-table" style="font-size:0.78rem;">
+                      <thead>
+                        <tr>
+                          <th>불량 유형</th>
+                          <th>A (EA)</th>
+                          <th>B (EA)</th>
+                          <th>C (EA)</th>
+                          <th>소계</th>
+                        </tr>
+                      </thead>
+                      <tbody id="joint-defect-matrix-body">
+                        <!-- Dynamically rendered 10 items in JS -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- 5. 비가동 및 작업 변동 소요시간 기록 -->
+                <div class="clip-sub-card">
+                  <label class="form-label mb-2" style="font-weight:700;color:var(--accent-rose);">🔹 5. 비가동 및 작업 변동 소요시간 기록</label>
+                  <div class="grid-3 mb-2">
+                    <div>
+                      <label class="form-label" style="font-size:0.75rem;">발생 유형</label>
+                      <select class="form-select" id="joint-act-type">
+                        <option value="자재결품">자재결품</option>
+                        <option value="설비수리">설비수리</option>
+                        <option value="금형수리">금형수리</option>
+                        <option value="작업준비">작업준비</option>
+                        <option value="3정5S">3정5S</option>
+                        <option value="근태관리">근태관리</option>
+                        <option value="교육">교육</option>
+                        <option value="기타">기타</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="form-label" style="font-size:0.75rem;">시작 ~ 종료 시각</label>
+                      <div style="display:flex;gap:0.2rem;">
+                        <input type="time" class="form-control" id="joint-act-start" />
+                        <input type="time" class="form-control" id="joint-act-end" />
+                      </div>
+                    </div>
+                    <div>
+                      <label class="form-label" style="font-size:0.75rem;">소요시간 (분)</label>
+                      <div style="display:flex;gap:0.25rem;">
+                        <input type="number" class="form-control" id="joint-act-min" readonly placeholder="자동산출" />
+                        <button type="button" class="btn btn-primary btn-sm" id="btn-add-joint-act">추가</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="joint-act-list" style="font-size:0.8rem;color:var(--text-muted);">
+                    <!-- Active logged items -->
+                  </div>
+                </div>
+
+                <!-- 6. 일 3회 점검 (금형 청소 & 홀막힘 확인) -->
+                <div class="clip-sub-card mb-0">
+                  <label class="form-label mb-2" style="font-weight:700;color:var(--accent-emerald);">🔹 6. 일 3회 필수 점검 (금형 청소 & 홀막힘 확인)</label>
+                  <div class="table-responsive">
+                    <table class="data-table" style="font-size:0.8rem;">
+                      <thead>
+                        <tr>
+                          <th>구분</th>
+                          <th>작업 전 (시간)</th>
+                          <th>작업 중 (시간)</th>
+                          <th>작업 후 (시간)</th>
+                          <th>이상 유무</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td style="font-weight:700;">금형 청소시간</td>
+                          <td><input type="time" class="form-control" id="joint-clean-before" /></td>
+                          <td><input type="time" class="form-control" id="joint-clean-during" /></td>
+                          <td><input type="time" class="form-control" id="joint-clean-after" /></td>
+                          <td><label class="custom-checkbox-card" style="margin:0;padding:0.25rem 0.5rem;"><input type="checkbox" id="joint-clean-ok" checked /> <span>청소 완료</span></label></td>
+                        </tr>
+                        <tr>
+                          <td style="font-weight:700;">홀막힘 확인시간</td>
+                          <td><input type="time" class="form-control" id="joint-hole-before" /></td>
+                          <td><input type="time" class="form-control" id="joint-hole-during" /></td>
+                          <td><input type="time" class="form-control" id="joint-hole-after" /></td>
+                          <td><label class="custom-checkbox-card" style="margin:0;padding:0.25rem 0.5rem;"><input type="checkbox" id="joint-hole-ok" checked /> <span>홀막힘 없음</span></label>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+
+            <div class="card mb-3">
+              <div class="card-header">
+                <div class="card-title"><i class="ri-file-edit-line"></i> 2. 생산 수량 &amp; 비가동 입력</div>
+                <span class="badge badge-amber" id="log-status-badge">작성 중</span>
+              </div>
+              <div id="log-locked-notice" style="display:none;" class="mb-3" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.4);border-radius:var(--radius-sm);padding:0.75rem;">
+                <p style="color:#f87171;font-size:0.9rem;font-weight:600;">🔒 최종 제출 완료된 일지입니다.</p>
+              </div>
+
+              <div class="grid-2 mb-2">
+                <div class="form-group">
+                  <label class="form-label">작업 시작 시간 *</label>
+                  <input type="time" class="form-control" id="prod-time-start" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">작업 종료 시간 *</label>
+                  <input type="time" class="form-control" id="prod-time-end" />
+                </div>
+              </div>
+              <div class="grid-4 mb-2">
+                <div class="form-group">
+                  <label class="form-label">계획 생산량(EA)</label>
+                  <input type="number" class="form-control" id="prod-planned" value="0" min="0" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">총 생산량(실적)*</label>
+                  <input type="number" class="form-control" id="prod-total" value="0" min="0" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">정품 수량(EA)</label>
+                  <input type="number" class="form-control" id="prod-pass" value="0" readonly style="background:rgba(16,185,129,0.1);color:#34d399;font-weight:700;" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">불량 수량(EA)</label>
+                  <input type="number" class="form-control" id="prod-defect" value="0" min="0" style="color:#f87171;font-weight:700;" />
+                </div>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">불량 유형별 세부 집계</label>
+                <div id="defect-types-grid" class="grid-3"></div>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="custom-checkbox-card downtime-emergency-card">
+                  <input type="checkbox" id="chk-has-downtime" />
+                  <span style="color:var(--accent-rose);font-weight:800;font-size:0.95rem;">🚨 비가동 / 생산 중단 발생 (클릭 시 세부 및 여러 회차 추가)</span>
+                </label>
+              </div>
+
+              <div id="downtime-section" class="card mb-3 downtime-emergency-card hidden">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+                  <strong style="color:var(--accent-rose);font-size:0.95rem;"><i class="ri-alarm-warning-fill"></i> 생산중단 / 비가동 회차별 등록 (다회차 지원)</strong>
+                  <span class="badge badge-rose" id="dt-entry-count-badge">0 건 기록됨</span>
+                </div>
+
+                <div class="grid-3 mb-2">
+                  <div class="form-group">
+                    <label class="form-label">중단 발생 시각</label>
+                    <input type="datetime-local" class="form-control" id="dt-time" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">중단 지속 시간 (분)</label>
+                    <div style="display:flex;align-items:center;gap:0.4rem;">
+                      <input type="number" class="form-control" id="dt-duration" value="0" min="0" />
+                      <span class="badge badge-rose" id="dt-duration-warn" style="display:none;">10분 이상</span>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">발생 라인 (호기)</label>
+                    <div style="display:flex;gap:0.25rem;">
+                      <button type="button" class="btn btn-outline btn-sm line-btn selected" data-line="1호기">1호기</button>
+                      <button type="button" class="btn btn-outline btn-sm line-btn" data-line="2호기">2호기</button>
+                      <button type="button" class="btn btn-outline btn-sm line-btn" data-line="3호기">3호기</button>
+                      <button type="button" class="btn btn-outline btn-sm line-btn" data-line="4호기">4호기</button>
+                    </div>
+                    <input type="hidden" id="dt-line-no" value="1호기" />
+                  </div>
+                </div>
+
+                <div class="grid-2 mb-2">
+                  <div class="form-group">
+                    <label class="form-label">중단 원인 구분</label>
+                    <select class="form-select" id="dt-reason">
+                      <option value="⚙️ 설비 고장 / 파손">⚙️ 설비 고장 / 파손</option>
+                      <option value="📦 소재 / 부품 결품">📦 소재 / 부품 결품</option>
+                      <option value="🛠️ 공구 / 치공구 교체">🛠️ 공구 / 치공구 교체</option>
+                      <option value="⚠️ 품질 이상 / 치수 오차">⚠️ 품질 이상 / 치수 오차</option>
+                      <option value="🚨 안전 점검 / 전력 점검">🚨 안전 점검 / 전력 점검</option>
+                      <option value="📝 기타 비가동 사유">📝 기타 비가동 사유</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">발생 부품명</label>
+                    <input type="text" class="form-control" id="dt-part-name" placeholder="부품명" readonly />
+                  </div>
+                </div>
+
+                <div class="form-group mb-2">
+                  <label class="form-label">세부 내용 및 특이사항</label>
+                  <input type="text" class="form-control" id="dt-note" placeholder="중단 상세 조치 및 발생 내용 입력" />
+                </div>
+
+                <button type="button" class="btn btn-rose btn-sm btn-block mb-3" id="btn-add-downtime-entry"><i class="ri-add-line"></i> 현재 회차 중단 내역 추가하기 (목록에 누적)</button>
+
+                <div class="table-responsive" style="background:rgba(15,23,42,0.7);border-radius:var(--radius-sm);padding:0.5rem;">
+                  <strong style="font-size:0.8rem;color:#f87171;display:block;margin-bottom:0.4rem;">📋 당일 생산 중단 요약 목록 (하단 누적)</strong>
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>회차</th>
+                        <th>시각</th>
+                        <th>라인</th>
+                        <th>지속</th>
+                        <th>원인 &amp; 세부내용</th>
+                        <th>삭제</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbl-downtime-entries-body">
+                      <tr><td colspan="6" class="text-center" style="color:var(--text-muted);">등록된 중단 내역이 없습니다.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">기타 작업 특이사항</label>
+                <textarea class="form-control" id="prod-note" rows="2" placeholder="특이사항 입력"></textarea>
+              </div>
+
+              <div class="grid-2">
+                <button type="button" class="btn btn-secondary" id="btn-save-draft"><i class="ri-save-line"></i> 중간 저장 (수정가능)</button>
+                <button type="button" class="btn btn-primary" id="btn-submit-final"><i class="ri-send-plane-fill"></i> 최종 제출</button>
+              </div>
+            </div>
+
+            <div class="card mb-3">
+              <div class="card-header">
+                <div class="card-title"><i class="ri-history-line"></i> 3. 나의 작업일지 제출 이력</div>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-refresh-history"><i class="ri-refresh-line"></i> 새로고침</button>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr><th>일자</th><th>차종/부품/공정</th><th>생산량</th><th>불량</th><th>불량률</th><th>비가동</th><th>상태</th></tr>
+                  </thead>
+                  <tbody id="tbl-my-history"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="floating-log-btn" id="btn-floating-logs">
+            <i class="ri-file-list-3-line"></i> 내 일지 목록 <span class="badge badge-rose" id="floating-logs-count" style="font-size:0.75rem;padding:0.1rem 0.4rem;margin-left:0.25rem;">0</span>
+          </button>
+          
+          <div class="log-popup-overlay" id="log-popup-overlay">
+            <div class="log-popup-panel">
+              <div class="log-popup-header">
+                <h3 style="font-size:1.1rem;font-weight:700;margin:0;"><i class="ri-history-line"></i> 오늘 작성한 일지</h3>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-close-log-popup" style="padding:0.25rem 0.5rem;border:none;"><i class="ri-close-line" style="font-size:1.5rem;"></i></button>
+              </div>
+              <div class="log-popup-body" id="log-popup-list">
+                <!-- 일지 목록 동적 렌더링 -->
+              </div>
+              <div class="log-popup-footer">
+                <button type="button" class="btn btn-primary btn-block" id="btn-popup-new-log"><i class="ri-add-line"></i> 새 공정 일지 작성하기</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="view-manager" class="view-section">
+        <div class="card mb-3" style="background:linear-gradient(135deg,#1e293b,#0f172a);border-left:4px solid #8b5cf6;color:#ffffff;box-shadow:0 4px 14px rgba(15,23,42,0.12);">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
+            <div>
+              <span class="badge badge-purple mb-1" style="background:#8b5cf6;color:#ffffff;border:none;font-weight:700;">실시간 대시보드 (PC 모니터링 최적화)</span>
+              <h2 style="font-size:1.45rem;font-weight:900;color:#ffffff;margin-top:0.25rem;">스텔란티스 생산량 &amp; 불량률 모니터링</h2>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <input type="date" class="form-control" id="mgr-date" style="width:auto;background:#0f172a;color:#ffffff;" />
+              <button type="button" class="btn btn-primary btn-sm" id="btn-qr-open"><i class="ri-qr-code-line"></i> QR 접속코드</button>
+              <button type="button" class="btn btn-outline btn-sm" id="btn-csv"><i class="ri-download-2-line"></i> CSV 엑셀 다운로드</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-4 mb-3">
+          <div class="kpi-card">
+            <div class="kpi-icon"><i class="ri-file-list-3-line"></i></div>
+            <div>
+              <div class="kpi-val" id="kpi-total-logs">0</div>
+              <div class="kpi-label">제출된 일지 수</div>
+            </div>
+          </div>
+          <div class="kpi-card emerald">
+            <div class="kpi-icon"><i class="ri-bar-chart-grouped-line"></i></div>
+            <div>
+              <div class="kpi-val" id="kpi-total-prod">0</div>
+              <div class="kpi-label">총 생산량 (EA)</div>
+            </div>
+          </div>
+          <div class="kpi-card rose">
+            <div class="kpi-icon"><i class="ri-error-warning-line"></i></div>
+            <div>
+              <div class="kpi-val" id="kpi-defect-rate">0.00%</div>
+              <div class="kpi-label">평균 불량률 (목표 &lt; 2.0%)</div>
+            </div>
+          </div>
+          <div class="kpi-card amber">
+            <div class="kpi-icon"><i class="ri-alarm-warning-line"></i></div>
+            <div>
+              <div class="kpi-val" id="kpi-downtime-count">0</div>
+              <div class="kpi-label">생산 중단 / 비가동 발생 건</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2 mb-3">
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i class="ri-line-chart-line"></i> 공정별 생산량 현황</div></div>
+            <div style="height:240px;"><canvas id="chart-prod"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i class="ri-pie-chart-line"></i> 주요 불량 유형 분포</div></div>
+            <div style="height:240px;"><canvas id="chart-defect"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header">
+            <div class="card-title"><i class="ri-table-line"></i> 스텔란티스 공정별 실시간 점검 및 클릭 상세 보기</div>
+            <div style="display:flex;align-items:center;gap:0.4rem;">
+              <select class="form-select" id="mgr-filter-model" style="width:auto;padding:0.35rem 0.6rem;font-size:0.8rem;">
+                <option value="ALL">전체 차종</option>
+                <option value="DT CREW">DT CREW</option>
+                <option value="DT QUAD">DT QUAD</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>차종 / 부품명</th>
+                  <th>공정명</th>
+                  <th>목표수량</th>
+                  <th class="sortable" data-sort="totalProd">총생산량 <i class="ri-arrow-up-down-line"></i></th>
+                  <th class="sortable" data-sort="passQty">양품수량 <i class="ri-arrow-up-down-line"></i></th>
+                  <th class="sortable" data-sort="defectQty">불량수량 <i class="ri-arrow-up-down-line"></i></th>
+                  <th class="sortable" data-sort="achieveRate">달성률 <i class="ri-arrow-up-down-line"></i></th>
+                  <th class="sortable" data-sort="defectRate">불량률 <i class="ri-arrow-up-down-line"></i></th>
+                  <th>비가동</th>
+                  <th>상세보기</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-mgr-processes"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card mb-3" style="border-left:4px solid var(--accent-rose);">
+          <div class="card-header">
+            <div class="card-title" style="color:var(--accent-rose);"><i class="ri-alarm-warning-line"></i> 🚨 생산 중단 / 비가동 신고 모아보기</div>
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              <span class="badge badge-rose" id="downtime-count-badge">0 건</span>
+              <button type="button" class="btn btn-primary btn-sm" id="btn-open-line-alert-manual" style="background:#dc2626;border:none;font-weight:700;padding:0.25rem 0.6rem;font-size:0.78rem;">
+                <i class="ri-alarm-warning-fill"></i> 🚨 비상 팝업 창 즉시 열기
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>작업일자</th>
+                  <th>작업자</th>
+                  <th>차종 / 부품 / 공정</th>
+                  <th>라인(호기)</th>
+                  <th>지속시간</th>
+                  <th>중단 원인</th>
+                  <th>세부 내용</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-downtime"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="ri-file-list-line"></i> 제출된 전체 일지 데이터</div>
+            <input type="text" class="form-control" id="log-search" placeholder="작업자/공정 검색" style="width:200px;" />
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>작업일자</th>
+                  <th>작업자</th>
+                  <th>차종 / 공정</th>
+                  <th>시작시각</th>
+                  <th>생산량</th>
+                  <th>불량</th>
+                  <th>불량률</th>
+                  <th>비가동</th>
+                  <th>상태</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-logs"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal-backdrop" id="modal-qr-tool">
+      <div class="modal-container">
+        <div class="modal-header">
+          <div class="modal-title"><i class="ri-qr-code-line"></i> 현장 근로자 접속용 QR 코드</div>
+          <button type="button" class="btn btn-outline btn-sm" id="btn-close-qr-modal">&times;</button>
+        </div>
+        <div class="modal-body text-center">
+          <p style="margin-bottom:1rem;color:var(--text-secondary);">휴대폰 카메라로 아래 QR 코드를 스캔하면 근로자 전용 작성 페이지로 바로 접속됩니다.</p>
+          <div id="qr-code-img-box" style="background:white;padding:1.5rem;display:inline-block;border-radius:12px;margin-bottom:1rem;"></div>
+          <p style="font-weight:700;color:var(--accent-blue);" id="qr-code-url-text"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="modal-process-detail-logs">
+      <div class="modal-container modal-lg">
+        <div class="modal-header">
+          <div class="modal-title" id="proc-detail-title"><i class="ri-file-search-line"></i> 공정별 개별 작업일지 상세 이력</div>
+          <button type="button" class="btn btn-outline btn-sm" id="btn-close-proc-detail-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>일자</th>
+                  <th>작업자</th>
+                  <th>생산량/양품</th>
+                  <th>불량(불량률)</th>
+                  <th>치수확인/LOT/비가동 상세</th>
+                  <th>특이사항</th>
+                  <th>상태</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-proc-detail-logs-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-close-proc-detail-modal-2">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="modal-line-alert-popup">
+      <div class="modal-container" style="border:3px solid var(--accent-rose);background:#ffffff;color:#0f172a;">
+        <div class="modal-header" style="background:#fee2e2;border-bottom:2px solid #fca5a5;">
+          <div class="modal-title" style="color:#dc2626;font-size:1.2rem;font-weight:900;">
+            <i class="ri-alarm-warning-fill" style="font-size:1.5rem;"></i> 🚨 [긴급 알림] 라인 반복 비가동 발생!
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="btn-close-line-alert-modal" style="color:#991b1b;border-color:#fca5a5;">&times;</button>
+        </div>
+        <div class="modal-body" style="color:#1e293b;padding:1.5rem;">
+          <div style="background:#fef2f2;border:2px dashed #ef4444;border-radius:10px;padding:1.2rem;margin-bottom:1.25rem;">
+            <h3 style="font-size:1.15rem;font-weight:900;color:#991b1b;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+              <i class="ri-error-warning-line"></i> <span id="alert-pop-model">스텔란티스</span> - <span id="alert-pop-part">D/SIDE</span> - <span id="alert-pop-proc">클립머신</span> - <span id="alert-pop-line">1호기</span> 점검 필요!
+            </h3>
+            <p style="font-size:0.95rem;color:#7f1d1d;line-height:1.6;font-weight:600;">
+              해당 라인에서 당일 생산 중단이 <strong><span id="alert-pop-count">2</span>회 이상</strong> 발생하였습니다.<br/>
+              설비 이상 또는 결품 여부를 즉시 점검해 주시기 바랍니다.
+            </p>
+          </div>
+
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:1rem;">
+            <h4 style="font-size:0.88rem;font-weight:800;color:#334155;margin-bottom:0.5rem;">📋 발생 중단 세부 기록 이력</h4>
+            <div id="alert-pop-history-list" style="font-size:0.85rem;"></div>
+          </div>
+        </div>
+        <div class="modal-footer" style="background:#f8fafc;border-top:1px solid #e2e8f0;">
+          <button type="button" class="btn btn-rose btn-block" id="btn-resolve-line-alert" style="padding:0.75rem;font-size:1rem;font-weight:800;">
+            <i class="ri-check-line"></i> 조치 완료 (알림 닫기)
+          </button>
+        </div>
+      </div>
+    </div>
+    </div>
+    
+    <div class="modal-backdrop" id="modal-mgr-login">
+      <div class="modal-container" style="max-width: 350px;">
+        <div class="modal-header">
+          <div class="modal-title"><i class="ri-lock-password-line"></i> 관리자 로그인</div>
+          <button type="button" class="btn btn-outline btn-sm" id="btn-close-mgr-login">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group mb-3">
+            <label class="form-label">비밀번호를 입력하세요</label>
+            <input type="password" class="form-control" id="mgr-login-pw" placeholder="비밀번호 입력..." />
+          </div>
+          <button type="button" class="btn btn-primary btn-block" id="btn-submit-mgr-login">로그인</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+const INITIAL_HIERARCHY = [
+  {
+    id: 'mfg_stellantis',
+    name: '스텔란티스 (Stellantis)',
+    models: [
+      {
+        id: 'mod_dt_crew',
+        name: 'DT CREW',
+        parts: [
+          {
+            id: 'part_dtc_dside',
+            name: 'D/SIDE',
+            processes: [
+              { id: 'proc_dtc_clip', name: '클립머신', isMachine: true, target: 1200 },
+              { id: 'proc_dtc_prep', name: '소재준비', isMachine: true, target: 1200 },
+              { id: 'proc_dtc_joint', name: '조인트', isMachine: false, target: 1200 },
+              { id: 'proc_dtc_post', name: '후가공', isMachine: false, target: 1200 },
+              { id: 'proc_dtc_pack', name: '검사포장', isMachine: false, target: 1200 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'mod_dt_quad',
+        name: 'DT QUAD',
+        parts: [
+          {
+            id: 'part_dtq_dside',
+            name: 'D/SIDE',
+            processes: [
+              { id: 'proc_dtq_clip', name: '클립머신', isMachine: true, target: 1000 },
+              { id: 'proc_dtq_prep', name: '소재준비', isMachine: true, target: 1000 },
+              { id: 'proc_dtq_joint', name: '조인트', isMachine: false, target: 1000 },
+              { id: 'proc_dtq_post', name: '후가공', isMachine: false, target: 1000 },
+              { id: 'proc_dtq_pack', name: '검사포장', isMachine: false, target: 1000 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'mod_ds_crew',
+        name: 'DS CREW',
+        parts: [
+          {
+            id: 'part_dsc_dside',
+            name: 'D/SIDE',
+            processes: [
+              { id: 'proc_dsc_prep_a', name: '소재준비(A)', isMachine: true, target: 1000 },
+              { id: 'proc_dsc_prep_c', name: '소재준비(C)', isMachine: true, target: 1000 },
+              { id: 'proc_dsc_prep_d', name: '소재준비(D)', isMachine: true, target: 1000 },
+              { id: 'proc_dsc_joint', name: '조인트', isMachine: false, target: 1000 },
+              { id: 'proc_dsc_post', name: '후가공', isMachine: false, target: 1000 },
+              { id: 'proc_dsc_pack', name: '검사포장', isMachine: false, target: 1000 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'mod_ds_std',
+        name: 'DS STD',
+        parts: [
+          {
+            id: 'part_dss_dside',
+            name: 'D/SIDE',
+            processes: [
+              { id: 'proc_dss_prep_a', name: '소재준비(A)', isMachine: true, target: 1000 },
+              { id: 'proc_dss_prep_c', name: '소재준비(C)', isMachine: true, target: 1000 },
+              { id: 'proc_dss_joint', name: '조인트', isMachine: false, target: 1000 },
+              { id: 'proc_dss_post', name: '후가공', isMachine: false, target: 1000 },
+              { id: 'proc_dss_pack', name: '검사포장', isMachine: false, target: 1000 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'mod_km_kx',
+        name: 'KM/KX',
+        parts: [
+          {
+            id: 'part_kmkx_hood',
+            name: 'HOOD SURROUND',
+            processes: [
+              { id: 'proc_kmkx_clip', name: '클립머신', isMachine: true, target: 1000 },
+              { id: 'proc_kmkx_joint', name: '조인트', isMachine: false, target: 1000 },
+              { id: 'proc_kmkx_post', name: '후가공', isMachine: false, target: 1000 },
+              { id: 'proc_kmkx_pack', name: '검사포장', isMachine: false, target: 1000 }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+];
+
+const DEFECT_TYPES = [
+  { id: 'def_dim', name: '치수 오차 / 규격 미달' },
+  { id: 'def_crack', name: '크랙 / 긁힘 / 변형' },
+  { id: 'def_burr', name: '버(Burr) / 후가공 미흡' },
+  { id: 'def_foreign', name: '이물질 / 도장 불량' },
+  { id: 'def_clip', name: '클립 체결 누락 / 파손' },
+  { id: 'def_joint', name: '조인트 접합 용접 불량' }
+];
+
+const LINE_LABELS = ['1호기', '2호기', '3호기', '4호기'];
+
+const DEFAULT_CLIP_WASTE_TYPES = [
+  '길이 미달',
+  '길이 초과',
+  '끝단부 불량',
+  '클립홀 찢어짐',
+  '클립간격 불량',
+  '드레인홀 불량',
+  '스코치',
+  '기타'
+];
+
+const CLIP_LINE_ITEMS = {
+  '1호기': [
+    { id: 'item_1_1', name: 'DT CREW A LH', lenSpec: '779 ± 5mm', gapSpec: '121 ± 1mm / 28 ± 1mm' },
+    { id: 'item_1_2', name: 'DT CREW A RH', lenSpec: '779 ± 5mm', gapSpec: '28 ± 1mm / 121 ± 1mm' },
+    { id: 'item_1_3', name: 'DT QUAD A LH', lenSpec: '509 ± 5mm', gapSpec: '121 ± 1mm / 28 ± 1mm' },
+    { id: 'item_1_4', name: 'DT QUAD A RH', lenSpec: '509 ± 5mm', gapSpec: '28 ± 1mm / 121 ± 1mm' }
+  ],
+  '2호기': [
+    { id: 'item_2_1', name: 'DT CREW B RH', lenSpec: '2,699 ± 6mm', gapSpec: '28 ± 1mm' },
+    { id: 'item_2_2', name: 'DT QUAD B LH', lenSpec: '2,463 ± 10mm', gapSpec: '28 ± 1mm' }
+  ],
+  '3호기': [
+    { id: 'item_3_1', name: 'DT CREW B LH', lenSpec: '2,699 ± 6mm', gapSpec: '28 ± 1mm' },
+    { id: 'item_3_2', name: 'DT QUAD B RH', lenSpec: '2,463 ± 10mm', gapSpec: '28 ± 1mm' }
+  ],
+  '4호기': [
+    { id: 'item_4_1', name: 'DT CREW B LH', lenSpec: '2,699 ± 6mm', gapSpec: '28 ± 1mm' },
+    { id: 'item_4_2', name: 'DT CREW B RH', lenSpec: '2,699 ± 6mm', gapSpec: '28 ± 1mm' }
+  ]
+};
+
+const DOWNTIME_REASONS = [
+  '⚙️ 설비 고장 / 파손', '📦 소재 / 부품 결품',
+  '🛠️ 공구 / 치공구 교체', '⚠️ 품질 이상 / 치수 오차',
+  '🚨 안전 점검 / 전력 점검', '📝 기타 비가동 사유'
+];
+
+const MODEL_BADGE = {
+  'DT CREW': 'badge-blue', 'DT QUAD': 'badge-purple'
+};
+
+const KEYS = { H: 'app_h_v6', L: 'app_l_v6', D: 'app_d_v6', WC: 'app_wc_v1' };
+
+// 안전한 스토리지: localStorage가 차단되면 메모리 기반으로 동작
+const _memStore = {};
+const _safeStorage = {
+  _ok: (() => { try { localStorage.setItem('__test__', '1'); localStorage.removeItem('__test__'); return true; } catch(e) { return false; } })(),
+  getItem(k) { try { return this._ok ? localStorage.getItem(k) : (_memStore[k] ?? null); } catch { return _memStore[k] ?? null; } },
+  setItem(k, v) { try { if (this._ok) localStorage.setItem(k, v); else _memStore[k] = v; } catch { _memStore[k] = v; } },
+  removeItem(k) { try { if (this._ok) localStorage.removeItem(k); else delete _memStore[k]; } catch { delete _memStore[k]; } }
+};
+
+function getWeekString(d = new Date()) {
+  const date = new Date(d.getTime());
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+  const week1 = new Date(date.getFullYear(), 0, 4);
+  const weekNumber = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+  return `${date.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
+}
+
+class DataStore {
+  constructor() { this._listeners = []; this._init(); }
+  _init() {
+    if (!_safeStorage.getItem(KEYS.H)) _safeStorage.setItem(KEYS.H, JSON.stringify(INITIAL_HIERARCHY));
+    if (!_safeStorage.getItem(KEYS.D)) _safeStorage.setItem(KEYS.D, JSON.stringify(DEFECT_TYPES));
+    
+    let currentLogs = [];
+    try { currentLogs = JSON.parse(_safeStorage.getItem(KEYS.L) || '[]'); } catch(e) {}
+    
+    if (currentLogs.length === 0) {
+      const today = new Date().toISOString().split('T')[0];
+      const sampleLogs = [];
+      const parts = INITIAL_HIERARCHY[0].models[0].parts[0].processes;
+      parts.forEach((p, idx) => {
+        sampleLogs.push({
+          id: 'sample_' + idx,
+          date: today, workerName: '테스터',
+          modelId: INITIAL_HIERARCHY[0].models[0].id, modelName: INITIAL_HIERARCHY[0].models[0].name,
+          partId: INITIAL_HIERARCHY[0].models[0].parts[0].id, partName: INITIAL_HIERARCHY[0].models[0].parts[0].name,
+          processId: p.id, processName: p.name,
+          totalQuantity: 1000 + (idx * 250),
+          passQuantity: 950 + (idx * 240),
+          defectQuantity: 50 + (idx * 10),
+          achieveRate: 0, defectRate: 0, hasDowntime: idx % 2 === 0, status: 'SUBMITTED'
+        });
+      });
+      _safeStorage.setItem(KEYS.L, JSON.stringify(sampleLogs));
+    }
+
+    if (!_safeStorage.getItem(KEYS.WC)) {
+      _safeStorage.setItem(KEYS.WC, JSON.stringify({ week: getWeekString(), counts: {} }));
+    }
+  }
+  getHierarchy() { return INITIAL_HIERARCHY; }
+  getDefectTypes() { return DEFECT_TYPES; }
+  getLogs() { try { return JSON.parse(_safeStorage.getItem(KEYS.L)) || []; } catch { return []; } }
+  saveLogs(logs) { _safeStorage.setItem(KEYS.L, JSON.stringify(logs)); this._notify(); }
+  getClipWasteCounts() {
+    try {
+      const data = JSON.parse(_safeStorage.getItem(KEYS.WC));
+      if (!data) return {};
+      if (!data.week) return data; // legacy
+      if (data.week !== getWeekString()) return {};
+      return data.counts || {};
+    }
+    catch { return {}; }
+  }
+  recordClipWaste(typeName) {
+    if (!typeName || typeName === '없음' || typeName === '기타' || typeName === '선택 안함 (정상)') return;
+    const counts = this.getClipWasteCounts();
+    counts[typeName] = (counts[typeName] || 0) + 1;
+    _safeStorage.setItem(KEYS.WC, JSON.stringify({ week: getWeekString(), counts }));
+    this._notify();
+  }
+
+  findOrCreateLog(params) {
+    const logs = this.getLogs();
+    let log = logs.find(l => l.date === params.date && l.processId === params.processId && l.workerName === params.workerName && l.birthDate === params.birthDate);
+    if (!log) {
+      log = {
+        id: `log_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+        ...params,
+        preWorkDone: false, clockInTime: null,
+        totalQuantity: 0, passQuantity: 0, defectQuantity: 0,
+        defectDetails: {}, hasDowntime: false, downtimeReason: '', downtimeLineNo: '', downtimeDuration: 0, downtimeNote: '',
+        note: '', status: 'DRAFT',
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+      };
+      logs.unshift(log);
+      this.saveLogs(logs);
+    }
+    return log;
+  }
+  updateLog(log) {
+    const logs = this.getLogs();
+    const idx = logs.findIndex(l => l.id === log.id);
+    if (idx !== -1) { logs[idx] = { ...logs[idx], ...log, updatedAt: new Date().toISOString() }; this.saveLogs(logs); return logs[idx]; }
+    return null;
+  }
+  deleteLog(id) {
+    const logs = this.getLogs();
+    const updated = logs.filter(l => l.id !== id);
+    if (updated.length !== logs.length) {
+      this.saveLogs(updated);
+      return true;
+    }
+    return false;
+  }
+  subscribe(fn) { this._listeners.push(fn); }
+  _notify() { this._listeners.forEach(fn => fn()); }
+}
+const store = new DataStore();
+
+
+class WorkerManager {
+  constructor() { this.currentLog = null; this.workerName = ''; this.birthDate = ''; this.hierarchy = store.getHierarchy(); }
+
+  render(container) {
+    this._bindStepEvents(container);
+  }
+
+  _bindStepEvents(container) {
+    this._bindPopupEvents(container);
+    container.querySelector('#btn-step1-next')?.addEventListener('click', () => {
+      try {
+        const wn = container.querySelector('#w-name').value.trim();
+        const bd = container.querySelector('#w-birth').value.trim();
+        if (!wn || bd.length !== 6) { alert('성함과 생년월일 6자리를 올바르게 입력해주세요!'); return; }
+        this.workerName = wn; this.birthDate = bd;
+        this._populateSelects(container);
+        this._goStep(container, 2);
+      } catch(e) {
+        alert('[디버그] 오류 발생:\n' + e.message);
+        console.error(e);
+      }
+    });
+
+    container.querySelector('#btn-step2-back')?.addEventListener('click', () => this._goStep(container, 1));
+    container.querySelector('#btn-step2-next')?.addEventListener('click', () => {
+      try {
+        this._loadLog(container);
+        this._goStep(container, 3);
+      } catch (e) {
+        alert("Step2 Next Error: " + e.message + "\n\n" + e.stack);
+        console.error(e);
+      }
+    });
+
+    container.querySelector('#w-mfg')?.addEventListener('change', () => this._updateModels(container));
+    container.querySelector('#w-model')?.addEventListener('change', () => this._updateParts(container));
+    container.querySelector('#w-part')?.addEventListener('change', () => this._updateProcs(container));
+
+    const calcPass = () => {
+      const t = parseInt(container.querySelector('#prod-total')?.value) || 0;
+      const d = parseInt(container.querySelector('#prod-defect')?.value) || 0;
+      const passEl = container.querySelector('#prod-pass');
+      if (passEl) passEl.value = Math.max(0, t - d);
+    };
+    container.querySelector('#prod-total')?.addEventListener('input', calcPass);
+    container.querySelector('#prod-defect')?.addEventListener('input', calcPass);
+
+    container.querySelector('#chk-has-downtime')?.addEventListener('change', (e) => {
+      const section = container.querySelector('#downtime-section');
+      if (e.target.checked) {
+        section?.classList.remove('hidden');
+        const dtTime = container.querySelector('#dt-time');
+        if (dtTime) dtTime.value = new Date().toISOString().substring(0,16);
+        if (this.currentLog) {
+          const dtPart = container.querySelector('#dt-part-name');
+          if (dtPart) dtPart.value = this.currentLog.partName || '';
+        }
+      } else {
+        section?.classList.add('hidden');
+      }
+    });
+
+    container.querySelector('#dt-duration')?.addEventListener('input', (e) => {
+      const warn = container.querySelector('#dt-duration-warn');
+      if (warn) warn.style.display = parseInt(e.target.value) >= 10 ? 'inline' : 'none';
+    });
+
+    container.addEventListener('click', (e) => {
+      if (e.target.classList.contains('line-btn')) {
+        container.querySelectorAll('.line-btn').forEach(b => b.classList.remove('selected'));
+        e.target.classList.add('selected');
+        const lineNo = container.querySelector('#dt-line-no');
+        if (lineNo) lineNo.value = e.target.dataset.line;
+      }
+    });
+
+    container.querySelector('#btn-add-downtime-entry')?.addEventListener('click', () => this._addDowntimeEntry(container));
+    container.querySelector('#btn-prework-submit')?.addEventListener('click', () => this._submitPrework(container));
+    container.querySelector('#btn-save-draft')?.addEventListener('click', () => this._saveLog(container, 'DRAFT'));
+    container.querySelector('#btn-submit-final')?.addEventListener('click', () => this._saveLog(container, 'SUBMITTED'));
+    container.querySelector('#btn-refresh-history')?.addEventListener('click', () => this._renderHistory(container));
+  }
+
+  _goStep(container, step) {
+    container.querySelector('#step1').style.display = step === 1 ? 'block' : 'none';
+    container.querySelector('#step2').style.display = step === 2 ? 'block' : 'none';
+    container.querySelector('#step3').style.display = step === 3 ? 'block' : 'none';
+
+    container.querySelector('#pill-1').className = `step-pill ${step === 1 ? 'active' : 'done'}`;
+    container.querySelector('#pill-2').className = `step-pill ${step === 2 ? 'active' : step > 2 ? 'done' : ''}`;
+    container.querySelector('#pill-3').className = `step-pill ${step === 3 ? 'active' : ''}`;
+
+    const floatBtn = container.querySelector('#btn-floating-logs');
+    if (floatBtn) {
+      if (step > 1 && this.workerName) {
+        floatBtn.classList.add('visible');
+        this._updateFloatingLogsCount(container);
+      } else {
+        floatBtn.classList.remove('visible');
+      }
+    }
+  }
+
+  _populateSelects(container) {
+    container.querySelector('#w-mfg').innerHTML = this.hierarchy.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    this._updateModels(container);
+  }
+  _updateModels(container) {
+    const mfgId = container.querySelector('#w-mfg').value;
+    const mfg = this.hierarchy.find(m => m.id === mfgId);
+    container.querySelector('#w-model').innerHTML = (mfg?.models || []).map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    this._updateParts(container);
+  }
+  _updateParts(container) {
+    const mfgId = container.querySelector('#w-mfg').value;
+    const modelId = container.querySelector('#w-model').value;
+    const mfg = this.hierarchy.find(m => m.id === mfgId);
+    const model = (mfg?.models || []).find(m => m.id === modelId);
+    container.querySelector('#w-part').innerHTML = (model?.parts || []).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    this._updateProcs(container);
+  }
+  _updateProcs(container) {
+    const mfgId = container.querySelector('#w-mfg').value;
+    const modelId = container.querySelector('#w-model').value;
+    const partId = container.querySelector('#w-part').value;
+    const mfg = this.hierarchy.find(m => m.id === mfgId);
+    const model = (mfg?.models || []).find(m => m.id === modelId);
+    const part = (model?.parts || []).find(p => p.id === partId);
+    container.querySelector('#w-proc').innerHTML = (part?.processes || []).map(pr => `<option value="${pr.id}">${pr.name}</option>`).join('');
+  }
+
+  _loadLog(container) {
+    const mfgId = container.querySelector('#w-mfg').value;
+    const modelId = container.querySelector('#w-model').value;
+    const partId = container.querySelector('#w-part').value;
+    const processId = container.querySelector('#w-proc').value;
+
+    const mfg = this.hierarchy.find(m => m.id === mfgId);
+    const model = (mfg?.models || []).find(m => m.id === modelId);
+    const part = (model?.parts || []).find(p => p.id === partId);
+    const proc = (part?.processes || []).find(pr => pr.id === processId);
+
+    const today = new Date().toISOString().split('T')[0];
+    this.currentLog = store.findOrCreateLog({
+      date: today, workerName: this.workerName, birthDate: this.birthDate,
+      mfgName: mfg?.name || '', modelId: model?.id || '', modelName: model?.name || '',
+      partId: part?.id || '', partName: part?.name || '', processId: proc?.id || '', processName: proc?.name || '',
+      isMachine: proc?.isMachine || false
+    });
+
+    const isClip = (proc?.name || '').includes('클립머신') || (proc?.id || '').includes('clip');
+    container.querySelector('#clip-spec-card').style.display = isClip ? 'block' : 'none';
+    if (isClip) this._initClipCard(container);
+
+    const isPrep = (proc?.name || '').includes('소재준비') || (proc?.id || '').includes('prep');
+    container.querySelector('#prep-spec-card').style.display = isPrep ? 'block' : 'none';
+    if (isPrep) this._initPrepCard(container, proc);
+
+    const isJoint = (proc?.name || "").includes("조인트") || (proc?.id || "").includes("joint");
+    const jointCard = container.querySelector("#joint-spec-card");
+    if (jointCard) jointCard.style.display = isJoint ? "block" : "none";
+    if (isJoint) this._initJointCard(container, proc);
+
+    try {
+      this._renderPrework(container, proc?.isMachine || false);
+      this._renderDefectGrid(container);
+      this._populateLogUI(container);
+      this._renderHistory(container);
+    } catch (e) {
+      alert("loadLog Error: " + e.message + "\n\n" + e.stack);
+    }
+  }
+
+  _initClipCard(container) {
+    const clipCard = container.querySelector('#clip-spec-card');
+    if (!clipCard) return;
+
+    let activeLine = '1호기';
+
+    const renderLine = (lineNo) => {
+      activeLine = lineNo;
+      container.querySelector('#clip-active-line-title').innerHTML = `<i class="ri-cpu-line"></i> [ ${lineNo} 일지 작성 ]`;
+      container.querySelector('#clip-active-line-badge').textContent = `${lineNo} 전용 생산품목`;
+
+      const itemSel = container.querySelector('#clip-single-item-sel');
+      const items = CLIP_LINE_ITEMS[lineNo] || [];
+      itemSel.innerHTML = items.map(it => `<option value="${it.name}" data-len="${it.lenSpec}" data-gap="${it.gapSpec}">${it.name}</option>`).join('');
+
+      updateSpecTag();
+    };
+
+    const updateSpecTag = () => {
+      const itemSel = container.querySelector('#clip-single-item-sel');
+      const opt = itemSel.options[itemSel.selectedIndex];
+      const tag = container.querySelector('#clip-single-spec-tag');
+      if (opt && tag) tag.textContent = `📐 전장: ${opt.dataset.len} | 끝단 클립 간격(시작/끝): ${opt.dataset.gap}`;
+    };
+
+    const populateWasteTypes = () => {
+      const wasteSel = container.querySelector('#clip-single-waste-type');
+      if (!wasteSel) return;
+      const counts = store.getClipWasteCounts();
+      const sortedTypes = [...DEFAULT_CLIP_WASTE_TYPES].sort((a, b) => {
+        const cA = counts[a] || 0;
+        const cB = counts[b] || 0;
+        if (a === '기타') return 1;
+        if (b === '기타') return -1;
+        return cB - cA;
+      });
+
+      wasteSel.innerHTML = '<option value="">선택 안함 (정상)</option>' + sortedTypes.map(name => {
+        const cnt = counts[name] || 0;
+        const badgeStr = cnt > 0 ? ` (🔥 ${cnt}회)` : '';
+        return `<option value="${name}">${name}${badgeStr}</option>`;
+      }).join('');
+
+      const etcInput = container.querySelector('#clip-single-waste-etc');
+      wasteSel.onchange = () => {
+        if (etcInput) etcInput.style.display = wasteSel.value === '기타' ? 'block' : 'none';
+      };
+    };
+
+    populateWasteTypes();
+
+    clipCard.querySelectorAll('.clip-line-tab').forEach(tab => {
+      tab.onclick = (e) => {
+        clipCard.querySelectorAll('.clip-line-tab').forEach(t => t.classList.remove('active'));
+        const btn = e.currentTarget;
+        btn.classList.add('active');
+        renderLine(btn.dataset.cline);
+      };
+    });
+
+    container.querySelector('#clip-single-item-sel').onchange = updateSpecTag;
+    renderLine('1호기');
+  }
+
+  _initPrepCard(container, proc) {
+    const isCrew = (this.currentLog?.modelName || '').includes('CREW');
+    const targetLen = isCrew ? '779±5' : '509±5';
+    container.querySelectorAll('.prep-spec-len').forEach(el => el.textContent = targetLen);
+
+    const tabs = container.querySelectorAll('.prep-tab-btn');
+    tabs.forEach(btn => {
+      btn.onclick = () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        const side = btn.dataset.side;
+        container.querySelector('#prep-tab-content-LH').style.display = side === 'LH' ? 'block' : 'none';
+        container.querySelector('#prep-tab-content-RH').style.display = side === 'RH' ? 'block' : 'none';
+        container.querySelectorAll('.prep-side-label').forEach(el => el.textContent = side);
+      };
+    });
+
+    const calcPrepDef = (side) => {
+      let tot = 0;
+      container.querySelectorAll(`.prep-${side}-def`).forEach(inp => {
+        tot += parseInt(inp.value) || 0;
+      });
+      const totalEl = container.querySelector(`#prep-${side}-def-total`);
+      if (totalEl) totalEl.value = tot;
+    };
+    container.querySelectorAll('.prep-LH-def').forEach(inp => inp.addEventListener('input', () => calcPrepDef('LH')));
+    container.querySelectorAll('.prep-RH-def').forEach(inp => inp.addEventListener('input', () => calcPrepDef('RH')));
+  }
+
+  _initJointCard(container, proc) {
+    const jointCard = container.querySelector('#joint-spec-card');
+    if (!jointCard) return;
+
+    // 1) Update Mold Machine labels dynamically when selection changes
+    const updateMoldLabels = () => {
+      const m1 = container.querySelector('#joint-m1-no')?.value || '1호기';
+      const m2 = container.querySelector('#joint-m2-no')?.value || '2호기';
+      const m3 = container.querySelector('#joint-m3-no')?.value || '3호기';
+
+      const l1 = container.querySelector('#joint-lbl-m1');
+      const l2 = container.querySelector('#joint-lbl-m2');
+      const l3 = container.querySelector('#joint-lbl-m3');
+
+      if (l1) l1.textContent = "#1 (" + m1 + ")";
+      if (l2) l2.textContent = "#2 (" + m2 + ")";
+      if (l3) l3.textContent = "#3 (" + m3 + ")";
+    };
+
+    ['#joint-m1-no', '#joint-m2-no', '#joint-m3-no'].forEach(selId => {
+      const sel = container.querySelector(selId);
+      if (sel) sel.onchange = updateMoldLabels;
+    });
+    updateMoldLabels();
+
+    // 2) Validation for Temp (201 +- 10 : 191 ~ 211) & Sec (90 +- 10 : 80 ~ 100)
+    container.querySelectorAll('.joint-temp').forEach(inp => {
+      inp.oninput = () => {
+        const val = parseFloat(inp.value);
+        if (isNaN(val)) {
+          inp.style.border = '1px solid var(--border-color)';
+          inp.style.color = 'var(--text-main)';
+        } else if (val < 191 || val > 211) {
+          inp.style.border = '2px solid var(--accent-rose)';
+          inp.style.color = 'var(--accent-rose)';
+        } else {
+          inp.style.border = '1px solid var(--accent-emerald)';
+          inp.style.color = 'var(--accent-emerald)';
+        }
+      };
+    });
+
+    container.querySelectorAll('.joint-time').forEach(inp => {
+      inp.oninput = () => {
+        const val = parseFloat(inp.value);
+        if (isNaN(val)) {
+          inp.style.border = '1px solid var(--border-color)';
+          inp.style.color = 'var(--text-main)';
+        } else if (val < 80 || val > 100) {
+          inp.style.border = '2px solid var(--accent-rose)';
+          inp.style.color = 'var(--accent-rose)';
+        } else {
+          inp.style.border = '1px solid var(--accent-emerald)';
+          inp.style.color = 'var(--accent-emerald)';
+        }
+      };
+    });
+
+    // 3) Render Defect Matrix (10 Defect Types)
+    const defectTypes = [
+      '떨어짐/찢어짐', '양 부족', '밀림/크랙', '기포', '씹힘/삽입불량',
+      '넘침/오버랩', '후변형', '이물질', '꼬임', '기타'
+    ];
+
+    const tbody = container.querySelector('#joint-defect-matrix-body');
+    if (tbody && tbody.children.length === 0) {
+      tbody.innerHTML = defectTypes.map((type, idx) => 
+        '<tr>' +
+          '<td style="font-weight:700;">' + (idx + 1) + '. ' + type + '</td>' +
+          '<td><input type="number" min="0" value="0" class="form-control joint-def-input joint-def-a" data-type="' + type + '" data-cat="A" /></td>' +
+          '<td><input type="number" min="0" value="0" class="form-control joint-def-input joint-def-b" data-type="' + type + '" data-cat="B" /></td>' +
+          '<td><input type="number" min="0" value="0" class="form-control joint-def-input joint-def-c" data-type="' + type + '" data-cat="C" /></td>' +
+          '<td style="font-weight:700;color:var(--accent-rose);" class="joint-def-row-subtotal">0</td>' +
+        '</tr>'
+      ).join('');
+
+      const calcDefectTotals = () => {
+        let grandTotal = 0;
+        tbody.querySelectorAll('tr').forEach(tr => {
+          let rowTot = 0;
+          tr.querySelectorAll('.joint-def-input').forEach(inp => {
+            rowTot += parseInt(inp.value) || 0;
+          });
+          tr.querySelector('.joint-def-row-subtotal').textContent = rowTot;
+          grandTotal += rowTot;
+        });
+        const gTotalEl = container.querySelector('#joint-defect-grand-total');
+        if (gTotalEl) gTotalEl.value = grandTotal;
+      };
+
+      tbody.querySelectorAll('.joint-def-input').forEach(inp => {
+        inp.oninput = calcDefectTotals;
+      });
+    }
+
+    // 4) Activity duration calculation
+    const startInp = container.querySelector('#joint-act-start');
+    const endInp = container.querySelector('#joint-act-end');
+    const minInp = container.querySelector('#joint-act-min');
+    const addBtn = container.querySelector('#btn-add-joint-act');
+    const actList = container.querySelector('#joint-act-list');
+
+    const calcDuration = () => {
+      if (!startInp.value || !endInp.value) {
+        if (minInp) minInp.value = '';
+        return;
+      }
+      const [sH, sM] = startInp.value.split(':').map(Number);
+      const [eH, eM] = endInp.value.split(':').map(Number);
+      let diff = (eH * 60 + eM) - (sH * 60 + sM);
+      if (diff < 0) diff += 1440; // overnight
+      if (minInp) minInp.value = diff;
+    };
+
+    if (startInp) startInp.onchange = calcDuration;
+    if (endInp) endInp.onchange = calcDuration;
+
+    if (addBtn && actList) {
+      const loggedActs = [];
+      addBtn.onclick = () => {
+        const type = container.querySelector('#joint-act-type').value;
+        const dur = minInp.value;
+        if (!dur || dur <= 0) {
+          alert("시작 시각과 종료 시각을 정확히 지정해 주세요.");
+          return;
+        }
+        loggedActs.push(type + " (" + startInp.value + " ~ " + endInp.value + ", " + dur + "분)");
+        actList.innerHTML = loggedActs.map(item => '<span class="badge badge-rose mr-1 mb-1" style="display:inline-block;padding:0.3rem 0.6rem;">' + item + '</span>').join(' ');
+      };
+    }
+  }
+
+  _renderPrework(container, isMachine) {
+    container.querySelector('#prework-title').innerHTML = isMachine
+      ? '<i class="ri-settings-4-line"></i> 1. TPM 기계 점검 일지'
+      : '<i class="ri-shield-user-line"></i> 1. 작업 전 안전 점검 일지';
+    container.querySelector('#checklist-container').innerHTML = isMachine ? `
+      <label class="custom-checkbox-card"><input type="checkbox" /> <span>⚡ 전원 및 비상정지 스위치 정상 동작</span></label>
+      <label class="custom-checkbox-card"><input type="checkbox" /> <span>🛢️ 오일/가공유 누유 여부 및 게이지 정상</span></label>
+      <label class="custom-checkbox-card"><input type="checkbox" /> <span>🔊 구동 시 이상소음 및 진동 없음</span></label>
+      <label class="custom-checkbox-card"><input type="checkbox" /> <span>🧹 금형/치공구 이물질 제거 및 청결</span></label>
+    ` : `
+      <label class="custom-checkbox-card"><input type="checkbox" /> <span>🥽 개인 보호구(안전모, 안전화, 장갑) 착용</span></label>
+      <label class="custom-checkbox-card"><input type="checkbox" /> <span>🧹 작업장 주변 정리정돈 상태 확인</span></label>
+      <label class="custom-checkbox-card"><input type="checkbox" /> <span>💪 음주 및 질환 없음 (건강 상태 쾌적)</span></label>
+      <label class="custom-checkbox-card"><input type="checkbox" /> <span>🛠️ 작업 수공구 파손 여부 점검 완료</span></label>
+    `;
+  }
+
+  _renderDefectGrid(container) {
+    const defects = store.getDefectTypes();
+    container.querySelector('#defect-types-grid').innerHTML = defects.map(d => `
+      <div class="form-group mb-1">
+        <label class="form-label" style="font-size:0.78rem;">${d.name}</label>
+        <input type="number" class="form-control defect-input" data-did="${d.id}" min="0" value="0" style="padding:0.4rem;" />
+      </div>
+    `).join('');
+  }
+
+  _populateLogUI(container) {
+    const log = this.currentLog;
+    const pwBadge = container.querySelector('#prework-status-badge');
+    const pwBtn = container.querySelector('#btn-prework-submit');
+
+    if (log.preWorkDone) {
+      pwBadge.className = 'badge badge-emerald'; pwBadge.textContent = '점검 완료';
+      pwBtn.disabled = true; pwBtn.innerHTML = '✅ 점검 완료됨';
+      container.querySelectorAll('#checklist-container input').forEach(c => { c.checked = true; c.disabled = true; });
+    } else {
+      pwBadge.className = 'badge badge-amber'; pwBadge.textContent = '미완료';
+      pwBtn.disabled = false;
+      const today = new Date().toISOString().split('T')[0];
+      const hasClockedIn = store.getLogs().some(l => l.workerName === this.workerName && l.date === today && l.preWorkDone && l.id !== log.id);
+      pwBtn.innerHTML = hasClockedIn ? '<i class="ri-check-double-line"></i> TPM 점검 완료' : '<i class="ri-check-double-line"></i> 점검 완료 및 근무 시작 기록';
+      container.querySelectorAll('#checklist-container input').forEach(c => { c.checked = false; c.disabled = false; });
+    }
+
+    container.querySelector('#prod-time-start').value = log.timeStart || '';
+    container.querySelector('#prod-time-end').value = log.timeEnd || '';
+    container.querySelector('#prod-planned').value = log.plannedQuantity || 0;
+    container.querySelector('#prod-total').value = log.totalQuantity || 0;
+    container.querySelector('#prod-pass').value = log.passQuantity || 0;
+    container.querySelector('#prod-defect').value = log.defectQuantity || 0;
+    container.querySelector('#prod-note').value = log.note || '';
+
+    container.querySelectorAll('.defect-input').forEach(inp => {
+      inp.value = log.defectDetails?.[inp.dataset.did] || 0;
+    });
+
+    container.querySelector('#chk-has-downtime').checked = !!log.hasDowntime;
+    const dtSec = container.querySelector('#downtime-section');
+    if (log.hasDowntime) dtSec.classList.remove('hidden'); else dtSec.classList.add('hidden');
+
+    if (log.downtimeReason) {
+      const dtReasonSel = container.querySelector('#dt-reason');
+      const opt = Array.from(dtReasonSel.options).find(o => o.value === log.downtimeReason);
+      if (opt) dtReasonSel.value = log.downtimeReason;
+    }
+    container.querySelector('#dt-note').value = log.downtimeNote || '';
+    container.querySelector('#dt-part-name').value = log.partName || '';
+    const dur = log.downtimeDuration || 0;
+    container.querySelector('#dt-duration').value = dur;
+    container.querySelector('#dt-duration-warn').style.display = (dur >= 10 && log.hasDowntime) ? 'inline' : 'none';
+
+    const lineNo = log.downtimeLineNo || '';
+    container.querySelectorAll('.line-btn').forEach(b => {
+      b.classList.toggle('selected', b.dataset.line === lineNo);
+    });
+    container.querySelector('#dt-line-no').value = lineNo;
+
+    this._renderDowntimeEntries(container);
+
+    if (log.clipData && (log.processName?.includes('클립머신') || log.processId?.includes('clip'))) {
+      const cd = log.clipData;
+      if (cd.lineNo) {
+        const lineTab = container.querySelector(`.clip-line-tab[data-cline="${cd.lineNo}"]`);
+        if (lineTab) lineTab.click();
+      }
+      if (container.querySelector('#clip-single-item-sel') && cd.itemName) container.querySelector('#clip-single-item-sel').value = cd.itemName;
+      if (container.querySelector('#clip-single-t-start')) container.querySelector('#clip-single-t-start').value = cd.timeStart || '08:00';
+      if (container.querySelector('#clip-single-t-end')) container.querySelector('#clip-single-t-end').value = cd.timeEnd || '17:00';
+      if (container.querySelector('#clip-single-lot-init')) container.querySelector('#clip-single-lot-init').value = cd.lotInit || '';
+      if (container.querySelector('#clip-single-lot-mid')) container.querySelector('#clip-single-lot-mid').value = cd.lotMid || '';
+      if (container.querySelector('#clip-single-lot-fin')) container.querySelector('#clip-single-lot-fin').value = cd.lotFin || '';
+      if (container.querySelector('#dim-single-init-len')) container.querySelector('#dim-single-init-len').value = cd.dimInitLen || '';
+      if (container.querySelector('#dim-single-init-gap')) container.querySelector('#dim-single-init-gap').value = cd.dimInitGap || '';
+      if (container.querySelector('#dim-single-mid-len')) container.querySelector('#dim-single-mid-len').value = cd.dimMidLen || '';
+      if (container.querySelector('#dim-single-mid-gap')) container.querySelector('#dim-single-mid-gap').value = cd.dimMidGap || '';
+      if (container.querySelector('#dim-single-fin-len')) container.querySelector('#dim-single-fin-len').value = cd.dimFinLen || '';
+      if (container.querySelector('#dim-single-fin-gap')) container.querySelector('#dim-single-fin-gap').value = cd.dimFinGap || '';
+      if (container.querySelector('#clip-single-loss-join')) container.querySelector('#clip-single-loss-join').value = cd.lossJoin || 0;
+      if (container.querySelector('#clip-single-loss-defect')) container.querySelector('#clip-single-loss-defect').value = cd.lossDefect || 0;
+      if (container.querySelector('#clip-single-waste-total')) container.querySelector('#clip-single-waste-total').value = cd.wasteTotal || 0;
+      if (container.querySelector('#clip-single-waste-type') && cd.wasteType) {
+        container.querySelector('#clip-single-waste-type').value = cd.wasteType;
+        const etcInp = container.querySelector('#clip-single-waste-etc');
+        if (etcInp) {
+          etcInp.style.display = cd.wasteType === '기타' ? 'block' : 'none';
+          etcInp.value = cd.wasteNote || '';
+        }
+      }
+    }
+
+    if (log.prepData && (log.processName?.includes('소재준비') || log.processId?.includes('prep'))) {
+      const pd = log.prepData;
+      ['LH', 'RH'].forEach(side => {
+        if (container.querySelector(`#prep-${side}-lot-init`)) container.querySelector(`#prep-${side}-lot-init`).value = pd[`${side}_lotInit`] || '';
+        if (container.querySelector(`#prep-${side}-lot-mid`)) container.querySelector(`#prep-${side}-lot-mid`).value = pd[`${side}_lotMid`] || '';
+        if (container.querySelector(`#prep-${side}-lot-fin`)) container.querySelector(`#prep-${side}-lot-fin`).value = pd[`${side}_lotFin`] || '';
+        for (let i=1; i<=4; i++) {
+          for (let j=1; j<=3; j++) {
+            if (container.querySelector(`#prep-${side}-dim-${i}-${j}`)) {
+              container.querySelector(`#prep-${side}-dim-${i}-${j}`).value = pd[`${side}_dim_${i}_${j}`] || '';
+            }
+          }
+        }
+        if (container.querySelector(`#prep-${side}-def-ext-1`)) container.querySelector(`#prep-${side}-def-ext-1`).value = pd[`${side}_def_ext_1`] || 0;
+        if (container.querySelector(`#prep-${side}-def-ext-2`)) container.querySelector(`#prep-${side}-def-ext-2`).value = pd[`${side}_def_ext_2`] || 0;
+        if (container.querySelector(`#prep-${side}-def-ext-3`)) container.querySelector(`#prep-${side}-def-ext-3`).value = pd[`${side}_def_ext_3`] || 0;
+        if (container.querySelector(`#prep-${side}-def-prc-1`)) container.querySelector(`#prep-${side}-def-prc-1`).value = pd[`${side}_def_prc_1`] || 0;
+        if (container.querySelector(`#prep-${side}-def-prc-2`)) container.querySelector(`#prep-${side}-def-prc-2`).value = pd[`${side}_def_prc_2`] || 0;
+        if (container.querySelector(`#prep-${side}-def-prc-3`)) container.querySelector(`#prep-${side}-def-prc-3`).value = pd[`${side}_def_prc_3`] || 0;
+        if (container.querySelector(`#prep-${side}-def-total`)) container.querySelector(`#prep-${side}-def-total`).value = pd[`${side}_def_total`] || 0;
+      });
+      if (container.querySelector('#prep-chk-blade')) container.querySelector('#prep-chk-blade').checked = pd.chkBlade || false;
+    }
+
+    const statusBadge = container.querySelector('#log-status-badge');
+    const locked = container.querySelector('#log-locked-notice');
+    const draftBtn = container.querySelector('#btn-save-draft');
+    const finalBtn = container.querySelector('#btn-submit-final');
+    if (log.status === 'SUBMITTED') {
+      statusBadge.className = 'badge badge-emerald'; statusBadge.innerHTML = '✅ 최종 제출 완료';
+      locked.style.display = 'block'; draftBtn.disabled = true; finalBtn.disabled = true;
+      finalBtn.textContent = '✅ 최종 제출 완료됨';
+    } else {
+      statusBadge.className = 'badge badge-amber'; statusBadge.innerHTML = '✍️ 작성 중 (중간저장 가능)';
+      locked.style.display = 'none'; draftBtn.disabled = false; finalBtn.disabled = false;
+      finalBtn.innerHTML = '<i class="ri-send-plane-fill"></i> 최종 제출';
+    }
+  }
+
+  _addDowntimeEntry(container) {
+    if (!this.currentLog) return;
+    if (!this.currentLog.downtimeEntries) this.currentLog.downtimeEntries = [];
+
+    const time = container.querySelector('#dt-time').value || new Date().toISOString().substring(0,16);
+    const duration = parseInt(container.querySelector('#dt-duration').value) || 0;
+    const lineNo = container.querySelector('#dt-line-no').value || '1호기';
+    const reason = container.querySelector('#dt-reason').value || '설비 점검';
+    const note = container.querySelector('#dt-note').value || '';
+
+    const entry = { id: 'dt_' + Date.now(), time, duration, lineNo, reason, note };
+    this.currentLog.downtimeEntries.push(entry);
+    this.currentLog.hasDowntime = true;
+    container.querySelector('#chk-has-downtime').checked = true;
+    container.querySelector('#downtime-section').classList.remove('hidden');
+
+    this._renderDowntimeEntries(container);
+    alert(`[${lineNo}] ${duration}분 중단 내역(회차)이 요약 목록에 추가되었습니다.`);
+  }
+
+  _renderDowntimeEntries(container) {
+    if (!this.currentLog) return;
+    const entries = this.currentLog.downtimeEntries || [];
+    const countBadge = container.querySelector('#dt-entry-count-badge');
+    if (countBadge) countBadge.textContent = `${entries.length} 건 기록됨`;
+    const tbody = container.querySelector('#tbl-downtime-entries-body');
+    if (!tbody) return;
+
+    if (!entries.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="color:var(--text-muted);">등록된 중단 내역이 없습니다. (위 양식 작성 후 추가 버튼 클릭)</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = entries.map((e, idx) => `
+      <tr>
+        <td><strong>${idx + 1}회차</strong></td>
+        <td style="font-size:0.75rem;">${(e.time||'').replace('T', ' ')}</td>
+        <td><span class="badge badge-purple">${e.lineNo||'1호기'}</span></td>
+        <td><span class="badge ${e.duration>=10?'badge-rose':'badge-amber'}">${e.duration||0}분</span></td>
+        <td style="font-size:0.78rem;"><strong>${e.reason}</strong><br/><span style="color:var(--text-secondary);">${e.note||'-'}</span></td>
+        <td><button type="button" class="btn btn-outline btn-sm btn-del-dt-entry" data-id="${e.id}" style="color:var(--accent-rose);padding:0.15rem 0.35rem;font-size:0.75rem;">&times;</button></td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('.btn-del-dt-entry').forEach(btn => {
+      btn.onclick = (evt) => {
+        const id = evt.currentTarget.dataset.id;
+        this.currentLog.downtimeEntries = this.currentLog.downtimeEntries.filter(x => x.id !== id);
+        if (!this.currentLog.downtimeEntries.length) {
+          this.currentLog.hasDowntime = false;
+        }
+        this._renderDowntimeEntries(container);
+      };
+    });
+  }
+
+  _submitPrework(container) {
+    if (!this.currentLog) return;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const pastLogs = store.getLogs().filter(l => l.workerName === this.workerName && l.date === today && l.preWorkDone && l.id !== this.currentLog.id);
+    
+    this.currentLog.preWorkDone = true;
+
+    if (pastLogs.length === 0) {
+      const clockIn = new Date().toISOString();
+      this.currentLog.clockInTime = clockIn;
+      store.updateLog(this.currentLog);
+      this._populateLogUI(container);
+      this._renderHistory(container);
+      alert(`근무 시작 시간: ${new Date(clockIn).toLocaleTimeString('ko-KR')} 기록 완료!`);
+    } else {
+      const firstClockIn = pastLogs.find(l => l.clockInTime)?.clockInTime || new Date().toISOString();
+      this.currentLog.clockInTime = firstClockIn; 
+      store.updateLog(this.currentLog);
+      this._populateLogUI(container);
+      this._renderHistory(container);
+      alert(`✅ TPM 점검 완료! (오늘 최초 출근 기록 유지됨)`);
+    }
+  }
+
+  _saveLog(container, status) {
+    if (!this.currentLog) return;
+    if (!this.currentLog.preWorkDone) { alert('작업 시작 전 점검 일지를 먼저 제출해 주세요!'); return; }
+    if (status === 'SUBMITTED' && !confirm('최종 제출 후에는 수정이 불가능합니다. 제출하시겠습니까?')) return;
+
+    const timeStart = container.querySelector('#prod-time-start').value || '';
+    const timeEnd = container.querySelector('#prod-time-end').value || '';
+    const plannedQuantity = parseInt(container.querySelector('#prod-planned').value) || 0;
+    const total = parseInt(container.querySelector('#prod-total').value) || 0;
+    const defect = parseInt(container.querySelector('#prod-defect').value) || 0;
+    const defectDetails = {};
+    container.querySelectorAll('.defect-input').forEach(inp => {
+      const v = parseInt(inp.value) || 0;
+      if (v > 0) defectDetails[inp.dataset.did] = v;
+    });
+    const hasDowntime = container.querySelector('#chk-has-downtime').checked;
+    const downtimeReason = hasDowntime ? container.querySelector('#dt-reason').value : '';
+    const downtimeLineNo = hasDowntime ? (container.querySelector('#dt-line-no').value || '') : '';
+    const downtimeDuration = hasDowntime ? (parseInt(container.querySelector('#dt-duration').value) || 0) : 0;
+    const downtimeNote = hasDowntime ? container.querySelector('#dt-note').value : '';
+    const note = container.querySelector('#prod-note').value;
+
+    const isClip = this.currentLog.processName?.includes('클립머신') || this.currentLog.processId?.includes('clip');
+    let clipData = null;
+    if (isClip) {
+      const activeTab = container.querySelector('.clip-line-tab.active')?.dataset.cline || '1호기';
+      clipData = {
+        lineNo: activeTab,
+        itemName: container.querySelector('#clip-single-item-sel')?.value || '',
+        timeStart: container.querySelector('#clip-single-t-start')?.value || '',
+        timeEnd: container.querySelector('#clip-single-t-end')?.value || '',
+        lotInit: container.querySelector('#clip-single-lot-init')?.value || '',
+        lotMid: container.querySelector('#clip-single-lot-mid')?.value || '',
+        lotFin: container.querySelector('#clip-single-lot-fin')?.value || '',
+        dimInitLen: container.querySelector('#dim-single-init-len')?.value || '',
+        dimInitGap: container.querySelector('#dim-single-init-gap')?.value || '',
+        dimMidLen: container.querySelector('#dim-single-mid-len')?.value || '',
+        dimMidGap: container.querySelector('#dim-single-mid-gap')?.value || '',
+        dimFinLen: container.querySelector('#dim-single-fin-len')?.value || '',
+        dimFinGap: container.querySelector('#dim-single-fin-gap')?.value || '',
+        lossJoin: parseInt(container.querySelector('#clip-single-loss-join')?.value) || 0,
+        lossDefect: parseInt(container.querySelector('#clip-single-loss-defect')?.value) || 0,
+        wasteType: container.querySelector('#clip-single-waste-type')?.value || '',
+        wasteNote: container.querySelector('#clip-single-waste-type')?.value === '기타' ? (container.querySelector('#clip-single-waste-etc')?.value || '기타') : (container.querySelector('#clip-single-waste-type')?.value || ''),
+        wasteTotal: parseInt(container.querySelector('#clip-single-waste-total')?.value) || 0
+      };
+    }
+
+    const isPrep = this.currentLog.processName?.includes('소재준비') || this.currentLog.processId?.includes('prep');
+    let prepData = null;
+    if (isPrep) {
+      prepData = {};
+      ['LH', 'RH'].forEach(side => {
+        prepData[`${side}_lotInit`] = container.querySelector(`#prep-${side}-lot-init`)?.value || '';
+        prepData[`${side}_lotMid`] = container.querySelector(`#prep-${side}-lot-mid`)?.value || '';
+        prepData[`${side}_lotFin`] = container.querySelector(`#prep-${side}-lot-fin`)?.value || '';
+        for (let i=1; i<=4; i++) {
+          for (let j=1; j<=3; j++) {
+            prepData[`${side}_dim_${i}_${j}`] = container.querySelector(`#prep-${side}-dim-${i}-${j}`)?.value || '';
+          }
+        }
+        prepData[`${side}_def_ext_1`] = parseInt(container.querySelector(`#prep-${side}-def-ext-1`)?.value) || 0;
+        prepData[`${side}_def_ext_2`] = parseInt(container.querySelector(`#prep-${side}-def-ext-2`)?.value) || 0;
+        prepData[`${side}_def_ext_3`] = parseInt(container.querySelector(`#prep-${side}-def-ext-3`)?.value) || 0;
+        prepData[`${side}_def_prc_1`] = parseInt(container.querySelector(`#prep-${side}-def-prc-1`)?.value) || 0;
+        prepData[`${side}_def_prc_2`] = parseInt(container.querySelector(`#prep-${side}-def-prc-2`)?.value) || 0;
+        prepData[`${side}_def_prc_3`] = parseInt(container.querySelector(`#prep-${side}-def-prc-3`)?.value) || 0;
+        prepData[`${side}_def_total`] = parseInt(container.querySelector(`#prep-${side}-def-total`)?.value) || 0;
+      });
+      prepData.chkBlade = container.querySelector('#prep-chk-blade')?.checked || false;
+    }
+
+    Object.assign(this.currentLog, {
+      timeStart, timeEnd, plannedQuantity,
+      totalQuantity: total, defectQuantity: defect, passQuantity: Math.max(0, total - defect),
+      defectDetails, hasDowntime, downtimeReason, downtimeLineNo, downtimeDuration, downtimeNote, note, status,
+      clipData, prepData
+    });
+    store.updateLog(this.currentLog);
+    if (clipData && clipData.wasteType) {
+      store.recordClipWaste(clipData.wasteType);
+    }
+    this._populateLogUI(container);
+    this._renderHistory(container);
+    alert(status === 'SUBMITTED' ? '최종 제출 완료!' : '중간 저장 완료! 언제든 수정하실 수 있습니다.');
+  }
+
+  _renderHistory(container) {
+    const tbody = container.querySelector('#tbl-my-history');
+    if (!this.workerName || !this.birthDate) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="color:var(--text-muted);">접속 후 이력이 표시됩니다.</td></tr>';
+      return;
+    }
+
+    const logs = store.getLogs().filter(l => l.workerName === this.workerName && l.birthDate === this.birthDate);
+    if (!logs.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="color:var(--text-muted);">제출된 일지 이력이 없습니다.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = logs.map(l => {
+      const rate = l.totalQuantity > 0 ? ((l.defectQuantity / l.totalQuantity) * 100).toFixed(2) : '0.00';
+      return `<tr>
+        <td>${l.date}</td>
+        <td><span class="badge ${MODEL_BADGE[l.modelName]||'badge-blue'}">${l.modelName}</span> ${l.partName} - ${l.processName}</td>
+        <td>${l.totalQuantity.toLocaleString()}</td>
+        <td style="color:var(--accent-rose);">${l.defectQuantity.toLocaleString()}</td>
+        <td>${rate}%</td>
+        <td>${l.hasDowntime ? '<span class="badge badge-rose">🚨중단</span>' : '-'}</td>
+        <td style="display:flex; align-items:center; gap:0.5rem;">
+          ${l.status === 'SUBMITTED' ? '<span class="badge badge-emerald">✅제출</span>' : '<span class="badge badge-amber">✍️작성중</span>'}
+          <button type="button" class="btn btn-outline btn-sm btn-delete-log" data-id="${l.id}" style="color:var(--accent-rose); border-color:transparent; padding:0.2rem; font-size:1rem;" title="삭제">
+            <i class="ri-delete-bin-line"></i>
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.btn-delete-log').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        if(confirm('정말로 이 작업 일지를 삭제하시겠습니까?')) {
+          const logId = e.currentTarget.dataset.id;
+          store.deleteLog(logId);
+          if (this.currentLog && this.currentLog.id === logId) {
+            this.currentLog = null;
+            this._goStep(container, 2);
+          }
+          this._renderHistory(container);
+          this._updateFloatingLogsCount(container);
+          alert('일지가 삭제되었습니다.');
+        }
+      });
+    });
+  }
+
+  _bindPopupEvents(container) {
+    const floatBtn = container.querySelector('#btn-floating-logs');
+    const overlay = container.querySelector('#log-popup-overlay');
+    const closeBtn = container.querySelector('#btn-close-log-popup');
+    const newLogBtn = container.querySelector('#btn-popup-new-log');
+
+    floatBtn?.addEventListener('click', () => {
+      this._renderTodayLogsList(container);
+      overlay?.classList.add('active');
+    });
+    
+    closeBtn?.addEventListener('click', () => {
+      overlay?.classList.remove('active');
+    });
+    
+    overlay?.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.classList.remove('active');
+    });
+    
+    newLogBtn?.addEventListener('click', () => {
+      overlay?.classList.remove('active');
+      this.currentLog = null; // reset to create a new one
+      this._goStep(container, 2); // Go back to process selection
+    });
+  }
+
+  _updateFloatingLogsCount(container) {
+    const today = new Date().toISOString().split('T')[0];
+    const logs = store.getLogs().filter(l => l.date === today && l.workerName === this.workerName && l.birthDate === this.birthDate);
+    const countBadge = container.querySelector('#floating-logs-count');
+    if (countBadge) countBadge.textContent = logs.length.toString();
+  }
+
+  _renderTodayLogsList(container) {
+    const listEl = container.querySelector('#log-popup-list');
+    if (!listEl) return;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const logs = store.getLogs().filter(l => l.date === today && l.workerName === this.workerName && l.birthDate === this.birthDate);
+    
+    if (logs.length === 0) {
+      listEl.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:2rem;">오늘 작성한 일지가 없습니다.</div>';
+      return;
+    }
+    
+    listEl.innerHTML = logs.map(l => {
+      const isActive = this.currentLog && this.currentLog.id === l.id;
+      const statusBadge = l.status === 'SUBMITTED' ? '<span class="badge badge-emerald" style="float:right;">✅제출됨</span>' : '<span class="badge badge-amber" style="float:right;">✍️작성중</span>';
+      return `
+        <div class="log-popup-item ${isActive ? 'active-item' : ''}" data-logid="${l.id}">
+          <div style="font-weight:700;margin-bottom:0.25rem;">${l.modelName} - ${l.partName}</div>
+          <div style="font-size:0.85rem;color:var(--text-secondary);">
+            <i class="ri-git-merge-line"></i> ${l.processName}
+            ${statusBadge}
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    listEl.querySelectorAll('.log-popup-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const id = item.dataset.logid;
+        const log = store.getLogs().find(l => l.id === id);
+        if (log) {
+          this.currentLog = log;
+          container.querySelector('#w-mfg').value = 'mfg_stellantis';
+          this._updateModels(container);
+          container.querySelector('#w-model').value = log.modelId;
+          this._updateParts(container);
+          container.querySelector('#w-part').value = log.partId;
+          this._updateProcs(container);
+          container.querySelector('#w-proc').value = log.processId;
+          
+          container.querySelector('#log-popup-overlay').classList.remove('active');
+          this._loadLog(container);
+          this._goStep(container, 3);
+        }
+      });
+    });
+  }
+}
+
+class ManagerDashboard {
+  constructor() {
+    this.selDate = new Date().toISOString().split('T')[0];
+    this.chartProd = null;
+    this.chartDefect = null;
+    this.sortCol = null;
+    this.sortDesc = true;
+  }
+
+  render(container) {
+    container.querySelector('#mgr-date').value = this.selDate;
+    this._bindEvents(container);
+    this.refresh(container);
+  }
+
+  refresh(container) {
+    const filtered = this._getFiltered();
+    this._renderKPI(container, filtered);
+    this._renderCharts(container, filtered);
+    this._renderProcessOverview(container);
+    this._renderDowntimeTable(container);
+    this._renderLogs(container);
+    this._checkLineRepeatAlert();
+  }
+
+  _bindEvents(container) {
+    container.querySelector('#mgr-date').addEventListener('change', e => { this.selDate = e.target.value; this.refresh(container); });
+    container.querySelector('#mgr-filter-model').addEventListener('change', () => this.refresh(container));
+    container.querySelector('#log-search').addEventListener('input', () => this._renderLogs(container));
+    container.querySelector('#btn-csv').addEventListener('click', () => this._exportCSV());
+
+    container.querySelectorAll('.sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.sort;
+        if (this.sortCol === col) {
+          if (!this.sortDesc) {
+            this.sortDesc = true; // Ascending -> Descending
+          } else {
+            this.sortCol = null; // Descending -> Default
+          }
+        } else {
+          this.sortCol = col;
+          this.sortDesc = false; // New column -> Ascending
+          this.sortDesc = false;
+        }
+        
+        container.querySelectorAll('.sortable i').forEach(i => i.className = 'ri-arrow-up-down-line');
+        container.querySelectorAll('.sortable').forEach(t => t.classList.remove('active'));
+        if (this.sortCol) {
+          th.classList.add('active');
+          th.querySelector('i').className = this.sortDesc ? 'ri-arrow-down-line' : 'ri-arrow-up-line';
+        }
+        
+        this.refresh(container);
+      });
+    });
+
+    container.querySelector('#btn-qr-open').addEventListener('click', () => {
+      this._populateQR();
+      document.querySelector('#modal-qr-tool').classList.add('open');
+    });
+
+    container.querySelector('#btn-open-line-alert-manual')?.addEventListener('click', () => {
+      const hasAlerts = this._checkLineRepeatAlert(true);
+      if (!hasAlerts) {
+        alert('현재 조건(2회 이상 중단)에 해당하는 라인 비상 알림이 없습니다.');
+      }
+    });
+
+    document.querySelector('#btn-close-qr-modal').addEventListener('click', () => document.querySelector('#modal-qr-tool').classList.remove('open'));
+    document.querySelector('#btn-close-proc-detail-modal').addEventListener('click', () => document.querySelector('#modal-process-detail-logs').classList.remove('open'));
+    document.querySelector('#btn-close-proc-detail-modal-2').addEventListener('click', () => document.querySelector('#modal-process-detail-logs').classList.remove('open'));
+  }
+
+  _getFiltered() {
+    return store.getLogs().filter(l => l.date === this.selDate);
+  }
+
+  _renderKPI(container, logs) {
+    const totalLogs = logs.length;
+    const totalProd = logs.reduce((a, b) => a + (b.totalQuantity || 0), 0);
+    const totalDefect = logs.reduce((a, b) => a + (b.defectQuantity || 0), 0);
+    const rate = totalProd > 0 ? ((totalDefect / totalProd) * 100).toFixed(2) : '0.00';
+    const dtCount = logs.filter(l => l.hasDowntime).length;
+
+    container.querySelector('#kpi-total-logs').textContent = totalLogs;
+    container.querySelector('#kpi-total-prod').textContent = totalProd.toLocaleString();
+    container.querySelector('#kpi-defect-rate').textContent = `${rate}%`;
+    container.querySelector('#kpi-downtime-count').textContent = dtCount;
+  }
+
+  _renderCharts(container, logs) {
+    const ctxProd = container.querySelector('#chart-prod').getContext('2d');
+    const ctxDefect = container.querySelector('#chart-defect').getContext('2d');
+
+    const procMap = {};
+    logs.forEach(l => {
+      const key = `${l.modelName} ${l.processName}`;
+      procMap[key] = (procMap[key] || 0) + (l.totalQuantity || 0);
+    });
+
+    if (this.chartProd) this.chartProd.destroy();
+    this.chartProd = new Chart(ctxProd, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(procMap).length ? Object.keys(procMap) : ['데이터 없음'],
+        datasets: [{ label: '총 생산량', data: Object.values(procMap).length ? Object.values(procMap) : [0], backgroundColor: '#3b82f6', borderRadius: 4 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    const defectTypes = store.getDefectTypes();
+    const defectMap = {};
+    defectTypes.forEach(d => defectMap[d.name] = 0);
+    logs.forEach(l => {
+      if (l.defectDetails) {
+        Object.entries(l.defectDetails).forEach(([did, qty]) => {
+          const dt = defectTypes.find(x => x.id === did);
+          if (dt) defectMap[dt.name] += qty;
+        });
+      }
+    });
+
+    if (this.chartDefect) this.chartDefect.destroy();
+    this.chartDefect = new Chart(ctxDefect, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(defectMap),
+        datasets: [{ data: Object.values(defectMap), backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'] }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+
+  _renderProcessOverview(container) {
+    const logs = this._getFiltered();
+    const selectedModel = container.querySelector('#mgr-filter-model').value;
+    const hierarchy = store.getHierarchy();
+    const rows = [];
+
+    hierarchy[0].models.forEach(model => {
+      if (selectedModel !== 'ALL' && model.name !== selectedModel) return;
+      model.parts.forEach(part => {
+        part.processes.forEach(proc => {
+          const matched = logs.filter(l => l.processId === proc.id && l.modelId === model.id);
+          const totalProd = matched.reduce((a, b) => a + (b.totalQuantity || 0), 0);
+          const passQty = matched.reduce((a, b) => a + (b.passQuantity || 0), 0);
+          const defectQty = matched.reduce((a, b) => a + (b.defectQuantity || 0), 0);
+          const target = proc.target || 1000;
+          const achieveRate = ((totalProd / target) * 100).toFixed(1);
+          const defectRate = totalProd > 0 ? ((defectQty / totalProd) * 100).toFixed(2) : '0.00';
+          const hasDt = matched.some(l => l.hasDowntime);
+
+          rows.push({
+            modelName: model.name, partName: part.name, procName: proc.name, procId: proc.id,
+            target, totalProd, passQty, defectQty, achieveRate: parseFloat(achieveRate), defectRate: parseFloat(defectRate), hasDt, logCount: matched.length
+          });
+        });
+      });
+    });
+
+    if (this.sortCol) {
+      rows.sort((a, b) => {
+        let valA = a[this.sortCol];
+        let valB = b[this.sortCol];
+        if (valA < valB) return this.sortDesc ? 1 : -1;
+        if (valA > valB) return this.sortDesc ? -1 : 1;
+        return 0;
+      });
+    }
+
+    const tbody = container.querySelector('#tbl-mgr-processes');
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td><span class="badge ${MODEL_BADGE[r.modelName]||'badge-blue'}">${r.modelName}</span> ${r.partName}</td>
+        <td><strong>${r.procName}</strong></td>
+        <td>${r.target.toLocaleString()}</td>
+        <td style="font-weight:700;">${r.totalProd.toLocaleString()}</td>
+        <td style="color:var(--accent-emerald);">${r.passQty.toLocaleString()}</td>
+        <td style="color:var(--accent-rose);">${r.defectQty.toLocaleString()}</td>
+        <td>${r.achieveRate}%</td>
+        <td>${r.defectRate}%</td>
+        <td>${r.hasDt ? '<span class="badge badge-rose">🚨중단</span>' : '-'}</td>
+        <td><button type="button" class="btn btn-outline btn-sm btn-open-proc-modal" data-pid="${r.procId}" data-mname="${r.modelName}" style="padding:0.25rem 0.5rem;font-size:0.75rem;"><i class="ri-search-eye-line"></i> 상세(${r.logCount})</button></td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('.btn-open-proc-modal').forEach(b => {
+      b.onclick = (e) => {
+        const pid = e.currentTarget.dataset.pid;
+        const mname = e.currentTarget.dataset.mname;
+        this._openProcModal(pid, mname);
+      };
+    });
+  }
+
+  _openProcModal(procId, modelName) {
+    const logs = this._getFiltered().filter(l => l.processId === procId && l.modelName === modelName);
+    document.querySelector('#proc-detail-title').innerHTML = `<i class="ri-file-search-line"></i> [${modelName}] 개별 일지 상세 조회 (${logs.length}건)`;
+    
+    const tbody = document.querySelector('#tbl-proc-detail-logs-body');
+    if (!logs.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="color:var(--text-muted);">해당 공정에 제출된 개별 일지가 없습니다.</td></tr>';
+    } else {
+      tbody.innerHTML = logs.map(l => {
+        const rate = l.totalQuantity > 0 ? ((l.defectQuantity / l.totalQuantity) * 100).toFixed(2) : '0.00';
+        let detailHtml = '-';
+        if (l.clipData) {
+          const cd = l.clipData;
+          detailHtml = `
+            <div style="font-size:0.78rem;line-height:1.4;">
+              <span class="badge badge-purple">${cd.lineNo||'1호기'}</span> <strong>${cd.itemName||'-'}</strong> (${cd.timeStart||''}~${cd.timeEnd||''})<br/>
+              LOT: 초물(${cd.lotInit||'-'}) / 중물(${cd.lotMid||'-'}) / 종물(${cd.lotFin||'-'})<br/>
+              전장: 초물(${cd.dimInitLen||'-'}) 중물(${cd.dimMidLen||'-'}) 종물(${cd.dimFinLen||'-'})<br/>
+              간격: 초물(${cd.dimInitGap||'-'}) 중물(${cd.dimMidGap||'-'}) 종물(${cd.dimFinGap||'-'})<br/>
+              LOSS: 연결(${cd.lossJoin||0}) 불량(${cd.lossDefect||0}) 폐기(${cd.wasteTotal||0}EA: ${cd.wasteNote||'-'})
+            </div>
+          `;
+        }
+        
+        let dtHtml = '';
+        if (l.downtimeEntries && l.downtimeEntries.length) {
+          dtHtml = l.downtimeEntries.map((e, idx) => `
+            <div style="color:var(--accent-rose);font-size:0.75rem;margin-top:0.2rem;">
+              🚨 ${idx+1}회차: [${e.lineNo||'1호기'}] ${e.reason} (${e.duration}분) - ${e.note||'-'}
+            </div>
+          `).join('');
+        } else if (l.hasDowntime) {
+          dtHtml = `<div style="color:var(--accent-rose);font-size:0.75rem;">🚨 [${l.downtimeLineNo||'1호기'}] ${l.downtimeReason} (${l.downtimeDuration}분)</div>`;
+        }
+
+        return `
+          <tr>
+            <td>${l.date}</td>
+            <td><strong>${l.workerName}</strong><br/><span style="font-size:0.75rem;color:var(--text-muted);">(${l.birthDate})</span></td>
+            <td>총 ${l.totalQuantity.toLocaleString()} / 양품 ${l.passQuantity.toLocaleString()}</td>
+            <td><strong style="color:var(--accent-rose);">${l.defectQuantity.toLocaleString()}</strong> (${rate}%)</td>
+            <td>${detailHtml}${dtHtml}</td>
+            <td>${l.note || '-'}</td>
+            <td><button type="button" class="btn btn-outline btn-sm btn-delete-log" data-id="${l.id}" style="color:var(--accent-rose);border-color:var(--accent-rose);padding:0.2rem 0.5rem;font-size:0.75rem;"><i class="ri-delete-bin-line"></i></button></td>
+        <td>${l.status === 'SUBMITTED' ? '<span class="badge badge-emerald">✅제출</span>' : '<span class="badge badge-amber">✍️작성중</span>'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    document.querySelector('#modal-process-detail-logs').classList.add('open');
+  }
+
+  _renderDowntimeTable(container) {
+    const logs = this._getFiltered().filter(l => l.hasDowntime);
+    container.querySelector('#downtime-count-badge').textContent = `${logs.length} 건`;
+    const tbody = container.querySelector('#tbl-downtime');
+
+    if (!logs.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="color:var(--text-muted);">오늘 발생한 생산 중단 신고가 없습니다. (정상 가동 중)</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = logs.map(l => {
+      if (l.downtimeEntries && l.downtimeEntries.length) {
+        return l.downtimeEntries.map((e, idx) => `
+          <tr>
+            <td>${l.date}</td>
+            <td><strong>${l.workerName}</strong></td>
+            <td><span class="badge ${MODEL_BADGE[l.modelName]||'badge-blue'}">${l.modelName}</span> ${l.processName}</td>
+            <td><span class="badge badge-purple">${e.lineNo||'1호기'}</span> (${idx+1}회차)</td>
+            <td><span class="badge ${e.duration>=10?'badge-rose':'badge-amber'}">${e.duration||0}분</span></td>
+            <td><strong style="color:var(--accent-rose);">${e.reason}</strong></td>
+            <td style="font-size:0.8rem;">${e.note||'-'}</td>
+          </tr>
+        `).join('');
+      } else {
+        return `
+          <tr>
+            <td>${l.date}</td>
+            <td><strong>${l.workerName}</strong></td>
+            <td><span class="badge ${MODEL_BADGE[l.modelName]||'badge-blue'}">${l.modelName}</span> ${l.processName}</td>
+            <td><span class="badge badge-purple">${l.downtimeLineNo||'1호기'}</span></td>
+            <td><span class="badge ${l.downtimeDuration>=10?'badge-rose':'badge-amber'}">${l.downtimeDuration||0}분</span></td>
+            <td><strong style="color:var(--accent-rose);">${l.downtimeReason}</strong></td>
+            <td style="font-size:0.8rem;">${l.downtimeNote||'-'}</td>
+          </tr>
+        `;
+      }
+    }).join('');
+  }
+
+  _renderLogs(container) {
+    const q = (container.querySelector('#log-search').value || '').toLowerCase();
+    const logs = store.getLogs().filter(l => !q || l.workerName?.toLowerCase().includes(q) || l.processName?.toLowerCase().includes(q) || l.modelName?.toLowerCase().includes(q));
+    container.querySelector('#tbl-logs').innerHTML = logs.slice(0, 25).map(l => {
+      const rate = l.totalQuantity > 0 ? ((l.defectQuantity / l.totalQuantity) * 100).toFixed(2) : '0.00';
+      return `<tr>
+        <td>${l.date}</td>
+        <td><strong>${l.workerName}</strong> <span style="font-size:0.75rem;color:var(--text-muted);">(${l.birthDate||''})</span></td>
+        <td><span class="badge ${MODEL_BADGE[l.modelName]||'badge-blue'}">${l.modelName}</span> ${l.processName}</td>
+        <td>${l.clockInTime ? new Date(l.clockInTime).toLocaleTimeString('ko-KR') : '-'}</td>
+        <td style="font-weight:700;">${(l.totalQuantity||0).toLocaleString()}</td>
+        <td style="color:var(--accent-rose);">${(l.defectQuantity||0).toLocaleString()}</td>
+        <td>${rate}%</td>
+        <td>${l.hasDowntime ? '<span class="badge badge-rose">🚨중단</span>' : '-'}</td>
+        <td>${l.status==='SUBMITTED' ? '<span class="badge badge-emerald">✅제출</span>' : '<span class="badge badge-amber">✍️작성중</span>'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  _checkLineRepeatAlert(forceManual = false) {
+    if (!document.querySelector('#view-manager').classList.contains('active')) return false;
+
+    const logs = store.getLogs();
+    const today = new Date().toISOString().split('T')[0];
+    const dtLogs = logs.filter(l => l.date === today && l.hasDowntime);
+    if (!dtLogs.length) return false;
+
+    const lineMap = {};
+    dtLogs.forEach(l => {
+      const entries = (l.downtimeEntries && l.downtimeEntries.length) ? l.downtimeEntries : [
+        { lineNo: l.downtimeLineNo || '1호기', duration: l.downtimeDuration || 0, reason: l.downtimeReason || '중단 발생', note: l.downtimeNote || '' }
+      ];
+      entries.forEach(e => {
+        const lineKey = e.lineNo || '1호기';
+        const key = `${l.modelName || 'DT CREW'}|${l.partName || 'D/SIDE'}|${l.processName || '클립머신'}|${lineKey}`;
+        if (!lineMap[key]) {
+          lineMap[key] = {
+            model: l.modelName || 'DT CREW',
+            part: l.partName || 'D/SIDE',
+            proc: l.processName || '클립머신',
+            line: lineKey,
+            count: 0,
+            items: []
+          };
+        }
+        lineMap[key].count++;
+        lineMap[key].items.push(e);
+      });
+    });
+
+    let dismissedAlerts = {};
+    try {
+      dismissedAlerts = JSON.parse(_safeStorage.getItem('dismissedAlerts') || '{}');
+    } catch(e) {
+      dismissedAlerts = {};
+    }
+    
+    const alertLines = Object.values(lineMap).filter(m => {
+      if (m.count < 2) return false;
+      if (forceManual) return true; // Show even if dismissed when manually triggered
+      const ackKey = `${today}_${m.model}_${m.part}_${m.proc}_${m.line}_${m.count}`;
+      return !dismissedAlerts[ackKey];
+    });
+
+    if (!alertLines.length) return false;
+    const target = alertLines[0];
+
+    const pop = document.querySelector('#modal-line-alert-popup');
+    if (pop) {
+      document.querySelector('#alert-pop-model').textContent = target.model;
+      document.querySelector('#alert-pop-part').textContent = target.part;
+      document.querySelector('#alert-pop-proc').textContent = target.proc;
+      document.querySelector('#alert-pop-line').textContent = target.line;
+      document.querySelector('#alert-pop-count').textContent = target.count;
+
+      document.querySelector('#alert-pop-history-list').innerHTML = target.items.map((it, idx) => `
+        <div style="padding:0.35rem 0;border-bottom:1px dashed #e2e8f0;color:#1e293b;">
+          <strong>${idx + 1}회차:</strong> <span class="badge badge-rose">${it.reason || '중단'}</span> (${it.duration}분) - <span style="color:#475569;">${it.note || '세부내용 없음'}</span>
+        </div>
+      `).join('');
+
+      pop.classList.add('open');
+
+      const closeAction = () => pop.classList.remove('open');
+      const closeBtn = document.querySelector('#btn-close-line-alert-modal');
+      const resolveBtn = document.querySelector('#btn-resolve-line-alert');
+      if (closeBtn) closeBtn.onclick = closeAction;
+      if (resolveBtn) resolveBtn.onclick = () => {
+        const ackKey = `${today}_${target.model}_${target.part}_${target.proc}_${target.line}_${target.count}`;
+        dismissedAlerts[ackKey] = true;
+        _safeStorage.setItem('dismissedAlerts', JSON.stringify(dismissedAlerts));
+        closeAction();
+        if (!forceManual) {
+          setTimeout(() => this._checkLineRepeatAlert(), 300);
+        }
+      };
+    }
+    return true;
+  }
+
+  _populateQR() {
+    const box = document.querySelector('#qr-code-img-box');
+    const urlText = document.querySelector('#qr-code-url-text');
+    const currentUrl = window.location.href;
+    urlText.textContent = currentUrl;
+    box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentUrl)}" alt="QR Code" style="width:180px;height:180px;display:block;" />`;
+  }
+
+  _exportCSV() {
+    let csv = "\\uFEFF일자,작업자,생년월일,차종,부품,공정,근무시작,총생산량,양품,불량,불량률,중단여부,중단원인,특이사항,상태\\n";
+    store.getLogs().forEach(l => {
+      const rate = l.totalQuantity > 0 ? ((l.defectQuantity / l.totalQuantity) * 100).toFixed(2) : '0.00';
+      csv += `"${l.date}","${l.workerName}","${l.birthDate||''}","${l.modelName}","${l.partName}","${l.processName}","${l.clockInTime||''}","${l.totalQuantity}","${l.passQuantity}","${l.defectQuantity}","${rate}%","${l.hasDowntime?'Y':'N'}","${l.downtimeReason||''}","${l.note||''}","${l.status}"\\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `스텔란티스_생산일지_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const workerMgr = new WorkerManager();
+  const mgrDash = new ManagerDashboard();
+
+  const workerSection = document.querySelector('#view-worker');
+  const mgrSection = document.querySelector('#view-manager');
+  const btnWorker = document.querySelector('#btn-mode-worker');
+  const btnMgr = document.querySelector('#btn-mode-manager');
+
+  workerMgr.render(workerSection);
+  mgrDash.render(mgrSection);
+
+  const switchMode = (mode) => {
+    if (mode === 'WORKER') {
+      workerSection.classList.add('active');
+      mgrSection.classList.remove('active');
+      btnWorker.classList.add('active');
+      btnMgr.classList.remove('active');
+    } else {
+      mgrSection.classList.add('active');
+      workerSection.classList.remove('active');
+      btnMgr.classList.add('active');
+      btnWorker.classList.remove('active');
+      mgrDash.refresh(mgrSection);
+    }
+  };
+
+  btnWorker.addEventListener('click', () => switchMode('WORKER'));
+  
+  const mgrLoginModal = document.querySelector('#modal-mgr-login');
+  const mgrLoginInput = document.querySelector('#mgr-login-pw');
+  
+  btnMgr.addEventListener('click', () => {
+    mgrLoginInput.value = '';
+    mgrLoginModal.classList.add('open');
+    mgrLoginInput.focus();
+  });
+  
+  document.querySelector('#btn-close-mgr-login').addEventListener('click', () => {
+    mgrLoginModal.classList.remove('open');
+  });
+  
+  const submitMgrLogin = () => {
+    const pw = mgrLoginInput.value;
+    if (pw === '12345604' || pw === '1234') {
+      mgrLoginModal.classList.remove('open');
+      switchMode('MANAGER');
+    } else {
+      alert('비밀번호가 올바르지 않습니다.');
+    }
+  };
+  
+  document.querySelector('#btn-submit-mgr-login').addEventListener('click', submitMgrLogin);
+  mgrLoginInput.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter') submitMgrLogin();
+  });
+
+  store.subscribe(() => {
+    if (mgrSection.classList.contains('active')) {
+      mgrDash.refresh(mgrSection);
+    }
+  });
+});
+  </script>
+</body>
+</html>
+
