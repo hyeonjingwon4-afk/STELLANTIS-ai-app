@@ -257,6 +257,30 @@
     .log-popup-item.active-item { border-color: var(--accent-blue); border-left: 4px solid var(--accent-blue); background: rgba(59,130,246,0.15); }
     .log-popup-footer { padding: 1rem; border-top: 1px solid var(--border-color); }
   </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDKpimCZwS7J_1cdEJHtr18Y_T7pb2y6Ek",
+      authDomain: "stellantis-ai-app.firebaseapp.com",
+      projectId: "stellantis-ai-app",
+      storageBucket: "stellantis-ai-app.firebasestorage.app",
+      messagingSenderId: "221053194547",
+      appId: "1:221053194547:web:8b1a064b40bfe225356e46",
+      measurementId: "G-9SDBXB71PD"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.fbDb = db;
+    window.fbCollection = collection;
+    window.fbOnSnapshot = onSnapshot;
+    window.fbDoc = doc;
+    window.fbSetDoc = setDoc;
+    window.fbDeleteDoc = deleteDoc;
+  </script>
 </head>
 <body>
   <div id="app">
@@ -1647,7 +1671,12 @@ function getWeekString(d = new Date()) {
 }
 
 class DataStore {
-  constructor() { this._listeners = []; this._init(); }
+  constructor() { 
+    this._listeners = []; 
+    this.cachedLogs = []; 
+    this._isFirebaseReady = false;
+    this._init(); 
+  }
   _init() {
     if (_safeStorage._ok) {
       Object.keys(localStorage).forEach(key => {
@@ -1660,43 +1689,48 @@ class DataStore {
     if (!_safeStorage.getItem(KEYS.H)) _safeStorage.setItem(KEYS.H, JSON.stringify(INITIAL_HIERARCHY));
     if (!_safeStorage.getItem(KEYS.D)) _safeStorage.setItem(KEYS.D, JSON.stringify(DEFECT_TYPES));
     
-    let currentLogs = [];
-    try { currentLogs = JSON.parse(_safeStorage.getItem(KEYS.L) || '[]'); } catch(e) {}
+    // Attempt to load from localStorage first for fast render
+    try { this.cachedLogs = JSON.parse(_safeStorage.getItem(KEYS.L)) || []; } catch(e) {}
     
-    const beforeCount = currentLogs.length;
-    currentLogs = currentLogs.filter(l => !l.id.startsWith('mock_'));
-    if (currentLogs.length !== beforeCount) {
-      _safeStorage.setItem(KEYS.L, JSON.stringify(currentLogs));
-    }
-    
-    if (currentLogs.length === 0) {
-      const today = new Date().toISOString().split('T')[0];
-      const sampleLogs = [];
-      const parts = INITIAL_HIERARCHY[0].models[0].parts[0].processes;
-      parts.forEach((p, idx) => {
-        sampleLogs.push({
-          id: 'sample_' + idx,
-          date: today, workerName: '테스터',
-          modelId: INITIAL_HIERARCHY[0].models[0].id, modelName: INITIAL_HIERARCHY[0].models[0].name,
-          partId: INITIAL_HIERARCHY[0].models[0].parts[0].id, partName: INITIAL_HIERARCHY[0].models[0].parts[0].name,
-          processId: p.id, processName: p.name,
-          totalQuantity: 1000 + (idx * 250),
-          passQuantity: 950 + (idx * 240),
-          defectQuantity: 50 + (idx * 10),
-          achieveRate: 0, defectRate: 0, hasSpecialEvent: idx % 2 === 0, isEmergency: false, status: 'SUBMITTED'
+    // Wait for Firebase to be injected
+    const checkFirebase = setInterval(() => {
+      if (window.fbDb) {
+        clearInterval(checkFirebase);
+        this._isFirebaseReady = true;
+        console.log("Firebase is ready. Listening to Firestore...");
+        
+        window.fbOnSnapshot(window.fbCollection(window.fbDb, "logs"), (snapshot) => {
+          this.cachedLogs = snapshot.docs.map(doc => doc.data());
+          // Cache to localStorage for offline fallback
+          _safeStorage.setItem(KEYS.L, JSON.stringify(this.cachedLogs));
+          this._notify();
+        }, (err) => {
+          console.error("Firestore listen error", err);
         });
-      });
-      _safeStorage.setItem(KEYS.L, JSON.stringify(sampleLogs));
-    }
+      }
+    }, 100);
+    // Timeout for Firebase check
+    setTimeout(() => clearInterval(checkFirebase), 10000);
 
     if (!_safeStorage.getItem(KEYS.WC)) {
       _safeStorage.setItem(KEYS.WC, JSON.stringify({ week: getWeekString(), counts: {} }));
     }
   }
+
   getHierarchy() { return INITIAL_HIERARCHY; }
   getDefectTypes() { return DEFECT_TYPES; }
-  getLogs() { try { return JSON.parse(_safeStorage.getItem(KEYS.L)) || []; } catch { return []; } }
-  saveLogs(logs) { _safeStorage.setItem(KEYS.L, JSON.stringify(logs)); this._notify(); }
+  
+  getLogs() { return this.cachedLogs; }
+  
+  saveLogs(logs) { 
+    // Fallback for non-Firebase usage
+    if (!this._isFirebaseReady) {
+      this.cachedLogs = logs;
+      _safeStorage.setItem(KEYS.L, JSON.stringify(logs)); 
+      this._notify();
+    }
+  }
+
   getClipWasteCounts() {
     try {
       const data = JSON.parse(_safeStorage.getItem(KEYS.WC));
@@ -1716,8 +1750,7 @@ class DataStore {
   }
 
   findOrCreateLog(params) {
-    const logs = this.getLogs();
-    let log = logs.find(l => l.date === params.date && l.processId === params.processId && l.workerName === params.workerName && l.birthDate === params.birthDate);
+    let log = this.cachedLogs.find(l => l.date === params.date && l.processId === params.processId && l.workerName === params.workerName && l.birthDate === params.birthDate);
     if (!log) {
       log = {
         id: `log_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
@@ -1728,26 +1761,70 @@ class DataStore {
         note: '', status: 'DRAFT',
         createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
       };
-      logs.unshift(log);
-      this.saveLogs(logs);
+      
+      if (this._isFirebaseReady) {
+        window.fbSetDoc(window.fbDoc(window.fbDb, "logs", log.id), log).catch(console.error);
+        const historyId = `history_${Date.now()}`;
+        window.fbSetDoc(window.fbDoc(window.fbDb, "log_history", historyId), {
+           logId: log.id, action: "CREATE", timestamp: new Date().toISOString(), snapshot: log
+        }).catch(console.error);
+        this.cachedLogs.unshift(log);
+      } else {
+        this.cachedLogs.unshift(log);
+        this.saveLogs(this.cachedLogs);
+      }
     }
     return log;
   }
+
   updateLog(log) {
-    const logs = this.getLogs();
-    const idx = logs.findIndex(l => l.id === log.id);
-    if (idx !== -1) { logs[idx] = { ...logs[idx], ...log, updatedAt: new Date().toISOString() }; this.saveLogs(logs); return logs[idx]; }
-    return null;
-  }
-  deleteLog(id) {
-    const logs = this.getLogs();
-    const updated = logs.filter(l => l.id !== id);
-    if (updated.length !== logs.length) {
-      this.saveLogs(updated);
-      return true;
+    const updatedLog = { ...log, updatedAt: new Date().toISOString() };
+    if (this._isFirebaseReady) {
+      window.fbSetDoc(window.fbDoc(window.fbDb, "logs", updatedLog.id), updatedLog).catch(console.error);
+      const historyId = `history_${Date.now()}`;
+      window.fbSetDoc(window.fbDoc(window.fbDb, "log_history", historyId), {
+         logId: updatedLog.id, action: "UPDATE", timestamp: new Date().toISOString(), snapshot: updatedLog
+      }).catch(console.error);
+      
+      const idx = this.cachedLogs.findIndex(l => l.id === updatedLog.id);
+      if (idx !== -1) {
+        this.cachedLogs[idx] = updatedLog;
+        this._notify();
+      }
+      return updatedLog;
+    } else {
+      const idx = this.cachedLogs.findIndex(l => l.id === updatedLog.id);
+      if (idx !== -1) { 
+        this.cachedLogs[idx] = updatedLog; 
+        this.saveLogs(this.cachedLogs); 
+        return updatedLog; 
+      }
+      return null;
     }
-    return false;
   }
+
+  deleteLog(id) {
+    if (this._isFirebaseReady) {
+      window.fbDeleteDoc(window.fbDoc(window.fbDb, "logs", id)).catch(console.error);
+      const historyId = `history_${Date.now()}`;
+      window.fbSetDoc(window.fbDoc(window.fbDb, "log_history", historyId), {
+         logId: id, action: "DELETE", timestamp: new Date().toISOString()
+      }).catch(console.error);
+      
+      this.cachedLogs = this.cachedLogs.filter(l => l.id !== id);
+      this._notify();
+      return true;
+    } else {
+      const updated = this.cachedLogs.filter(l => l.id !== id);
+      if (updated.length !== this.cachedLogs.length) {
+        this.cachedLogs = updated;
+        this.saveLogs(this.cachedLogs);
+        return true;
+      }
+      return false;
+    }
+  }
+  
   subscribe(fn) { this._listeners.push(fn); }
   _notify() { this._listeners.forEach(fn => fn()); }
 }
