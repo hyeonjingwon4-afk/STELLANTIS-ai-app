@@ -288,6 +288,7 @@
     window.fbUploadString = uploadString;
     window.fbGetDownloadURL = getDownloadURL;
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
   <div id="app">
@@ -2794,6 +2795,104 @@ class WorkerManager {
     }
   }
 
+  async _generateAndUploadPDF(log) {
+    if (!window.html2pdf || !window.fbStorage) return;
+
+    const reportDiv = document.createElement('div');
+    reportDiv.style.padding = '30px';
+    reportDiv.style.fontFamily = 'sans-serif';
+    reportDiv.style.color = '#333';
+    reportDiv.style.width = '800px';
+
+    const specialEventsHTML = (log.specialEvents || []).map(e => `
+      <li>[${e.type}] ${e.timeStart} ~ ${e.timeEnd} (${e.duration}분): ${e.note}</li>
+    `).join('') || '특이사항 없음';
+
+    reportDiv.innerHTML = `
+      <h1 style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px;">생산 작업 일보 (Daily Report)</h1>
+      <table style="width: 100%; margin-top: 20px; border-collapse: collapse;" border="1">
+        <tr>
+          <th style="padding: 8px; background: #eee;">근무일자</th>
+          <td style="padding: 8px;">${log.date}</td>
+          <th style="padding: 8px; background: #eee;">작업자</th>
+          <td style="padding: 8px;">${log.workerName}</td>
+        </tr>
+        <tr>
+          <th style="padding: 8px; background: #eee;">차종/품번</th>
+          <td style="padding: 8px;">${log.modelName} / ${log.partName}</td>
+          <th style="padding: 8px; background: #eee;">공정명</th>
+          <td style="padding: 8px;">${log.processName}</td>
+        </tr>
+        <tr>
+          <th style="padding: 8px; background: #eee;">근태시간</th>
+          <td style="padding: 8px;">${log.timeStart} ~ ${log.timeEnd}</td>
+          <th style="padding: 8px; background: #eee;">가동상태</th>
+          <td style="padding: 8px; font-weight: bold; color: ${log.isEmergency ? 'red' : 'green'};">${log.isEmergency ? '긴급 중단 발생' : '정상 가동'}</td>
+        </tr>
+      </table>
+
+      <h3 style="margin-top: 30px; border-left: 4px solid #000; padding-left: 10px;">생산 및 품질 실적</h3>
+      <table style="width: 100%; border-collapse: collapse;" border="1">
+        <tr>
+          <th style="padding: 8px; background: #eee;">계획수량</th>
+          <th style="padding: 8px; background: #eee;">총 생산량</th>
+          <th style="padding: 8px; background: #eee;">양품수량</th>
+          <th style="padding: 8px; background: #eee;">불량수량</th>
+        </tr>
+        <tr>
+          <td style="padding: 8px; text-align:center;">${log.plannedQuantity}</td>
+          <td style="padding: 8px; text-align:center; font-weight:bold;">${log.totalQuantity}</td>
+          <td style="padding: 8px; text-align:center; color:green; font-weight:bold;">${log.passQuantity}</td>
+          <td style="padding: 8px; text-align:center; color:red; font-weight:bold;">${log.defectQuantity}</td>
+        </tr>
+      </table>
+
+      <h3 style="margin-top: 30px; border-left: 4px solid #000; padding-left: 10px;">비가동 및 특이사항 신고내역</h3>
+      <ul style="line-height: 1.6;">
+        ${specialEventsHTML}
+      </ul>
+      <p style="margin-top: 15px;"><strong>작업자 비고:</strong> ${log.note || '없음'}</p>
+
+      ${log.photoUrl ? `<h3 style="margin-top: 30px; border-left: 4px solid #000; padding-left: 10px;">현장 사진 첨부</h3>
+      <img src="${log.photoUrl}" style="max-width: 100%; max-height: 300px; border: 1px solid #ccc; margin-top: 10px;"/>` : ''}
+
+      <div style="margin-top: 50px; text-align: right;">
+        <p>작성자: ${log.workerName} (서명)</p>
+        <p>제출일시: ${new Date().toLocaleString('ko-KR')}</p>
+      </div>
+    `;
+
+    const opt = {
+      margin:       10,
+      filename:     `report_${log.date}_${log.workerName}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    try {
+      const pdfBlob = await html2pdf().set(opt).from(reportDiv).outputPdf('blob');
+      
+      const fileName = `reports/report_${log.date}_${log.workerName}_${Date.now()}.pdf`;
+      const storageRef = window.fbRef(window.fbStorage, fileName);
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = reader.result;
+        window.fbUploadString(storageRef, base64data, 'data_url').then(snapshot => {
+          window.fbGetDownloadURL(snapshot.ref).then(downloadURL => {
+            log.reportPdfUrl = downloadURL;
+            store.updateLog(log);
+          });
+        });
+      };
+      reader.readAsDataURL(pdfBlob);
+      
+    } catch(err) {
+      console.error("PDF Generation Error:", err);
+    }
+  }
+
   _saveLog(container, status) {
     if (!this.currentLog) return;
     if (!this.currentLog.preWorkDone) { alert('작업 시작 전 점검 일지를 먼저 제출해 주세요!'); return; }
@@ -3040,9 +3139,14 @@ class WorkerManager {
     if (clipData && clipData.wasteType) {
       store.recordClipWaste(clipData.wasteType);
     }
+    
+    if (status === 'SUBMITTED') {
+      this._generateAndUploadPDF(this.currentLog);
+    }
+
     this._populateLogUI(container);
     this._renderHistory(container);
-    alert(status === 'SUBMITTED' ? '최종 제출 완료!' : '중간 저장 완료! 언제든 수정하실 수 있습니다.');
+    alert(status === 'SUBMITTED' ? '최종 제출 완료! (일보가 PDF로 자동 변환되어 서버에 저장됩니다)' : '중간 저장 완료! 언제든 수정하실 수 있습니다.');
   }
 
   _renderHistory(container) {
@@ -3069,6 +3173,7 @@ class WorkerManager {
         <td>${l.hasEmergency ? '<span class="badge badge-rose">🚨긴급</span>' : (l.hasSpecialEvent ? '<span class="badge badge-amber">⚠️특이사항</span>' : '-')}</td>
         <td style="display:flex; align-items:center; gap:0.5rem;">
           ${l.status === 'SUBMITTED' ? '<span class="badge badge-emerald">✅제출</span>' : '<span class="badge badge-amber">✍️작성중</span>'}
+          ${l.reportPdfUrl ? `<a href="${l.reportPdfUrl}" target="_blank" class="btn btn-outline btn-sm" style="padding:0.2rem; font-size:1rem; border-color:transparent; color:var(--accent-blue);" title="PDF 보기/다운로드"><i class="ri-file-pdf-line"></i></a>` : ''}
           <button type="button" class="btn btn-outline btn-sm btn-delete-log" data-id="${l.id}" style="color:var(--accent-rose); border-color:transparent; padding:0.2rem; font-size:1rem;" title="삭제">
             <i class="ri-delete-bin-line"></i>
           </button>
@@ -3602,7 +3707,10 @@ class ManagerDashboard {
             <td>${detailHtml}${seHtml}</td>
             <td>${l.note || '-'}</td>
             <td><button type="button" class="btn btn-outline btn-sm btn-delete-log" data-id="${l.id}" style="color:var(--accent-rose);border-color:var(--accent-rose);padding:0.2rem 0.5rem;font-size:0.75rem;"><i class="ri-delete-bin-line"></i></button></td>
-            <td>${l.status === 'SUBMITTED' ? '<span class="badge badge-emerald">✅제출</span>' : '<span class="badge badge-amber">✍️작성중</span>'}</td>
+            <td>
+              ${l.status === 'SUBMITTED' ? '<span class="badge badge-emerald">✅제출</span>' : '<span class="badge badge-amber">✍️작성중</span>'}
+              ${l.reportPdfUrl ? `<br><a href="${l.reportPdfUrl}" target="_blank" class="btn btn-outline btn-sm" style="margin-top:0.25rem; padding:0.2rem 0.5rem; font-size:0.75rem; color:var(--accent-blue);" title="PDF 일보 보기"><i class="ri-file-pdf-line"></i> PDF 보기</a>` : ''}
+            </td>
           </tr>
         `;
       }).join('');
@@ -3751,7 +3859,10 @@ class ManagerDashboard {
         <td style="color:var(--accent-rose);">${(l.defectQuantity||0).toLocaleString()}</td>
         <td>${rate}%</td>
         <td>${l.hasEmergency ? '<span class="badge badge-rose">🚨긴급</span>' : (l.hasSpecialEvent ? '<span class="badge badge-amber">⚠️특이사항</span>' : '-')}</td>
-        <td>${l.status==='SUBMITTED' ? '<span class="badge badge-emerald">✅제출</span>' : '<span class="badge badge-amber">✍️작성중</span>'}</td>
+        <td>
+          ${l.status==='SUBMITTED' ? '<span class="badge badge-emerald">✅제출</span>' : '<span class="badge badge-amber">✍️작성중</span>'}
+          ${l.reportPdfUrl ? `<br><a href="${l.reportPdfUrl}" target="_blank" class="btn btn-outline btn-sm" style="margin-top:0.25rem; padding:0.2rem 0.5rem; font-size:0.75rem; color:var(--accent-blue);" title="PDF 일보 보기"><i class="ri-file-pdf-line"></i> PDF 보기</a>` : ''}
+        </td>
       </tr>`;
     }).join('');
   }
