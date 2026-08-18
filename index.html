@@ -1308,6 +1308,40 @@
             </div>
           </div>
         </div>
+        
+        <div class="card mb-3" style="padding:1rem;">
+          <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
+            <div style="flex:1; min-width:150px;">
+              <label class="form-label" style="font-size:0.8rem;">차종 필터</label>
+              <select id="mgr-filter-model" class="form-control">
+                <option value="">전체 차종</option>
+                <option value="DT CREW">DT CREW</option>
+                <option value="DT QUAD">DT QUAD</option>
+                <option value="DS CREW">DS CREW</option>
+                <option value="DS STD">DS STD</option>
+                <option value="KM/KX">KM/KX</option>
+              </select>
+            </div>
+            <div style="flex:1; min-width:150px;">
+              <label class="form-label" style="font-size:0.8rem;">공정 필터</label>
+              <select id="mgr-filter-process" class="form-control">
+                <option value="">전체 공정</option>
+                <option value="준비">소재준비</option>
+                <option value="클립">클립머신</option>
+                <option value="조인트">조인트</option>
+                <option value="후가공">후가공</option>
+                <option value="검사">검사포장</option>
+              </select>
+            </div>
+            <div style="flex:1; min-width:150px;">
+              <label class="form-label" style="font-size:0.8rem;">작업자 이름 검색</label>
+              <div style="display:flex; gap:0.5rem;">
+                <input type="text" id="mgr-filter-worker" class="form-control" placeholder="이름 입력" />
+                <button type="button" class="btn btn-secondary" id="btn-mgr-search">검색</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="grid-4 mb-3">
           <div class="kpi-card">
@@ -3308,7 +3342,11 @@ class ManagerDashboard {
   _bindEvents(container) {
     container.querySelector('#mgr-date').addEventListener('change', e => { this.selDate = e.target.value; this.refresh(container); });
     container.querySelector('#mgr-filter-model').addEventListener('change', () => this.refresh(container));
-    container.querySelector('#log-search').addEventListener('input', () => this._renderLogs(container));
+    container.querySelector('#mgr-filter-process')?.addEventListener('change', () => this.refresh(container));
+    container.querySelector('#btn-mgr-search')?.addEventListener('click', () => this.refresh(container));
+    container.querySelector('#mgr-filter-worker')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') this.refresh(container); });
+
+    container.querySelector('#log-search')?.addEventListener('input', () => this._renderLogs(container));
     container.querySelector('#btn-csv').addEventListener('click', () => this._exportCSV());
 
     container.querySelectorAll('.sortable').forEach(th => {
@@ -3355,7 +3393,23 @@ class ManagerDashboard {
   }
 
   _getFiltered() {
-    return store.getLogs().filter(l => l.date === this.selDate);
+    let logs = store.getLogs().filter(l => l.date === this.selDate);
+    
+    const mModel = document.querySelector('#mgr-filter-model')?.value;
+    const mProc = document.querySelector('#mgr-filter-process')?.value;
+    const mWorker = document.querySelector('#mgr-filter-worker')?.value.trim();
+
+    if (mModel && mModel !== 'ALL') {
+      logs = logs.filter(l => l.modelName === mModel);
+    }
+    if (mProc && mProc !== 'ALL') {
+      logs = logs.filter(l => l.processName?.includes(mProc));
+    }
+    if (mWorker) {
+      logs = logs.filter(l => l.workerName?.includes(mWorker));
+    }
+
+    return logs;
   }
 
   _renderKPI(container, logs) {
@@ -3937,7 +3991,7 @@ class ManagerDashboard {
 
   _exportCSV() {
     let csv = "\\uFEFF일자,작업자,생년월일,차종,부품,공정,근무시작,총생산량,양품,불량,불량률,특이사항여부,긴급여부,비고,상태\\n";
-    store.getLogs().forEach(l => {
+    this._getFiltered().forEach(l => {
       const rate = l.totalQuantity > 0 ? ((l.defectQuantity / l.totalQuantity) * 100).toFixed(2) : '0.00';
       csv += `"${l.date}","${l.workerName}","${l.birthDate||''}","${l.modelName}","${l.partName}","${l.processName}","${l.clockInTime||''}","${l.totalQuantity}","${l.passQuantity}","${l.defectQuantity}","${rate}%","${l.hasSpecialEvent?'Y':'N'}","${l.isEmergency?'Y':'N'}","${l.note||''}","${l.status}"\\n`;
     });
