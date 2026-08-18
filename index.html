@@ -260,6 +260,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDKpimCZwS7J_1cdEJHtr18Y_T7pb2y6Ek",
@@ -273,6 +274,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     window.fbDb = db;
     window.fbCollection = collection;
@@ -280,6 +282,11 @@
     window.fbDoc = doc;
     window.fbSetDoc = setDoc;
     window.fbDeleteDoc = deleteDoc;
+    
+    window.fbStorage = storage;
+    window.fbRef = ref;
+    window.fbUploadString = uploadString;
+    window.fbGetDownloadURL = getDownloadURL;
   </script>
 </head>
 <body>
@@ -1227,6 +1234,22 @@
                 <textarea class="form-control" id="prod-note" rows="2" placeholder="특이사항 입력"></textarea>
               </div>
 
+              <div class="form-group mb-3">
+                <label class="form-label"><i class="ri-camera-fill"></i> 현장 사진 첨부</label>
+                <input type="file" id="prod-photo-upload" accept="image/*" capture="environment" style="display: none;" />
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('prod-photo-upload').click()" style="width: 100%; border-style: dashed; padding: 1rem; color: var(--text-muted);">
+                  <i class="ri-image-add-line" style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem;"></i>
+                  사진 촬영 또는 갤러리 선택
+                </button>
+                <div id="photo-preview-container" style="display: none; position: relative; margin-top: 10px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color);">
+                  <img id="photo-preview-img" src="" alt="preview" style="width: 100%; display: block;" />
+                  <button type="button" id="btn-remove-photo" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <i class="ri-close-line"></i>
+                  </button>
+                  <div id="photo-upload-status" style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: white; font-size: 0.8rem; padding: 4px; text-align: center;">대기중...</div>
+                </div>
+              </div>
+
               <div class="grid-2">
                 <button type="button" class="btn btn-secondary" id="btn-save-draft"><i class="ri-save-line"></i> 중간 저장 (수정가능)</button>
                 <button type="button" class="btn btn-primary" id="btn-submit-final"><i class="ri-send-plane-fill"></i> 최종 제출</button>
@@ -1917,6 +1940,82 @@ class WorkerManager {
     container.querySelector('#btn-save-draft')?.addEventListener('click', () => this._saveLog(container, 'DRAFT'));
     container.querySelector('#btn-submit-final')?.addEventListener('click', () => this._saveLog(container, 'SUBMITTED'));
     container.querySelector('#btn-refresh-history')?.addEventListener('click', () => this._renderHistory(container));
+
+    const photoInput = container.querySelector('#prod-photo-upload');
+    if (photoInput) {
+      photoInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+           this._compressAndUploadImage(e.target.files[0], container);
+        }
+      });
+      container.querySelector('#btn-remove-photo')?.addEventListener('click', () => {
+        container.querySelector('#photo-preview-container').style.display = 'none';
+        container.querySelector('#photo-preview-img').src = '';
+        photoInput.value = '';
+        if (this.currentLog) {
+           this.currentLog.photoUrl = null;
+           store.updateLog(this.currentLog);
+        }
+      });
+    }
+  }
+
+  async _compressAndUploadImage(file, container) {
+    const statusDiv = container.querySelector('#photo-upload-status');
+    const previewImg = container.querySelector('#photo-preview-img');
+    const previewCont = container.querySelector('#photo-preview-container');
+
+    statusDiv.textContent = '압축중...';
+    previewCont.style.display = 'block';
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 600;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+        } else {
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        previewImg.src = dataUrl;
+        
+        if (!window.fbStorage) {
+           statusDiv.textContent = '저장 실패(서버 미연결)';
+           return;
+        }
+        
+        statusDiv.textContent = '업로드중...';
+        const fileName = `photos/photo_${Date.now()}_${Math.floor(Math.random()*1000)}.jpg`;
+        const storageRef = window.fbRef(window.fbStorage, fileName);
+        
+        window.fbUploadString(storageRef, dataUrl, 'data_url').then(snapshot => {
+          window.fbGetDownloadURL(snapshot.ref).then(downloadURL => {
+            if (this.currentLog) {
+              this.currentLog.photoUrl = downloadURL;
+              store.updateLog(this.currentLog);
+            }
+            statusDiv.textContent = '저장 완료';
+          });
+        }).catch(err => {
+          console.error(err);
+          statusDiv.textContent = '업로드 오류';
+        });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
   _goStep(container, step) {
@@ -2526,8 +2625,18 @@ class WorkerManager {
     container.querySelector('#prod-defect').value = log.defectQuantity || 0;
     container.querySelector('#prod-note').value = log.note || '';
 
-
-
+    const photoPreviewContainer = container.querySelector('#photo-preview-container');
+    const photoImg = container.querySelector('#photo-preview-img');
+    if (log.photoUrl) {
+      photoImg.src = log.photoUrl;
+      photoPreviewContainer.style.display = 'block';
+      container.querySelector('#photo-upload-status').textContent = '저장됨';
+    } else {
+      photoImg.src = '';
+      photoPreviewContainer.style.display = 'none';
+      container.querySelector('#photo-upload-status').textContent = '대기중...';
+    }
+    
     container.querySelector('#chk-has-special-event').checked = !!log.hasSpecialEvent;
     const seSec = container.querySelector('#special-event-section');
     if (log.hasSpecialEvent) seSec.classList.remove('hidden'); else seSec.classList.add('hidden');
