@@ -2010,7 +2010,7 @@ class WorkerManager {
     if (isPost) this._initPostCard(container, proc);
     if (isPack) this._initPackCard(container, proc);
 
-    this._renderPrework(container, proc?.isMachine || false);
+    this._renderPrework(container, proc);
     this._populateLogUI(container);
     this._renderHistory(container);
   }
@@ -2434,21 +2434,67 @@ class WorkerManager {
     container.querySelectorAll('.prep-RH-def').forEach(inp => inp.addEventListener('input', () => calcPrepDef('RH')));
   }
 
-  _renderPrework(container, isMachine) {
-    container.querySelector('#prework-title').innerHTML = isMachine
-      ? '<i class="ri-settings-4-line"></i> 1. TPM 기계 점검 일지'
-      : '<i class="ri-shield-user-line"></i> 1. 작업 전 안전 점검 일지';
-    container.querySelector('#checklist-container').innerHTML = isMachine ? `
-      <label class="custom-checkbox-card"><input type="checkbox" /> <span>⚡ 전원 및 비상정지 스위치 정상 동작</span></label>
-      <label class="custom-checkbox-card"><input type="checkbox" /> <span>🛢️ 오일/가공유 누유 여부 및 게이지 정상</span></label>
-      <label class="custom-checkbox-card"><input type="checkbox" /> <span>🔊 구동 시 이상소음 및 진동 없음</span></label>
-      <label class="custom-checkbox-card"><input type="checkbox" /> <span>🧹 금형/치공구 이물질 제거 및 청결</span></label>
-    ` : `
-      <label class="custom-checkbox-card"><input type="checkbox" /> <span>🥽 개인 보호구(안전모, 안전화, 장갑) 착용</span></label>
-      <label class="custom-checkbox-card"><input type="checkbox" /> <span>🧹 작업장 주변 정리정돈 상태 확인</span></label>
-      <label class="custom-checkbox-card"><input type="checkbox" /> <span>💪 음주 및 질환 없음 (건강 상태 쾌적)</span></label>
-      <label class="custom-checkbox-card"><input type="checkbox" /> <span>🛠️ 작업 수공구 파손 여부 점검 완료</span></label>
-    `;
+  _renderPrework(container, proc) {
+    const processName = proc?.name || '';
+    let titleHTML = '';
+    let checklistHTML = '';
+
+    if (processName.includes('준비')) {
+      titleHTML = '<i class="ri-settings-4-line"></i> 1. 자주보전(TPM) - 소재준비 (단 커팅기)';
+      checklistHTML = `
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>✂️ 단 커팅기 칼날 마모 및 파손 여부 점검</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>🛡️ 절단기 안전 커버 및 안전 센서 작동 확인</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>💨 구동용 압축공기(에어) 압력 및 누설 확인</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>🧹 설비 주변 절단 찌꺼기 및 이물질 청소</span></label>
+      `;
+    } 
+    else if (processName.includes('클립')) {
+      titleHTML = '<i class="ri-settings-4-line"></i> 1. 자주보전(TPM) - 클립머신 (컨베이어)';
+      checklistHTML = `
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>🔄 컨베이어 벨트 마모 및 구동 모터 소음 점검</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>📍 클립 피더(Feeder) 막힘 확인 및 청소</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>💡 제품 인식 센서 및 클립 체결 센서 정상 작동</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>🚨 비상정지 스위치 테스트</span></label>
+      `;
+    }
+    else if (processName.includes('조인트')) {
+      titleHTML = '<i class="ri-settings-4-line"></i> 1. 자주보전(TPM) - 조인트 (유압프레스)';
+      checklistHTML = `
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>🧽 금형(Mold) 표면 고무 찌꺼기 청소 및 이형제 점검</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>🛢️ 유압프레스 실린더 누유(기름 샙) 및 압력 확인</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>🛡️ 양수 버튼(두 손 작동) 및 광센서 정상 작동 테스트</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>🌡️ 금형 열판 설정 온도 도달 및 편차 확인</span></label>
+      `;
+    }
+    else if (processName.includes('후가공')) {
+      titleHTML = '<i class="ri-settings-4-line"></i> 1. 작업 전 준비 - 후가공 (가위 작업)';
+      checklistHTML = `
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>✂️ 작업용 가위 날 상태(마모/무뎌짐) 점검</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>⛓️ 가위 분실/낙하 방지용 연결줄 상태 확인</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>💡 단면 정리 육안 확인을 위한 작업대 조명 점검</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>🧹 후가공 작업대 주변 고무 부스러기 청소</span></label>
+      `;
+    }
+    else if (processName.includes('검사') || processName.includes('포장')) {
+      titleHTML = '<i class="ri-shield-user-line"></i> 1. 작업 전 안전 및 품질 점검 - 검사포장';
+      checklistHTML = `
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>💡 육안 검사대 조명(조도) 및 깜빡임 확인</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>📏 검사용 지그 및 계측기 영점/파손 점검</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>📦 포장 박스 이물질 점검 및 라벨기 상태 확인</span></label>
+      `;
+    }
+    else {
+      titleHTML = '<i class="ri-shield-user-line"></i> 1. 작업 전 안전점검';
+      checklistHTML = `
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>🥽 개인 보호구(안전모, 안전화, 장갑) 착용</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>🧹 작업장 주변 정리정돈 상태 확인</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>💪 오늘의 작업 지시 및 특이사항 숙지</span></label>
+        <label class="custom-checkbox-card"><input type="checkbox" /> <span>🛠️ 작업 수공구 파손 여부 점검 완료</span></label>
+      `;
+    }
+
+    container.querySelector('#prework-title').innerHTML = titleHTML;
+    container.querySelector('#checklist-container').innerHTML = checklistHTML;
   }
 
 
