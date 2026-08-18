@@ -91,10 +91,11 @@
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+    .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.25rem; }
 
-    @media (max-width: 1024px) { .grid-4 { grid-template-columns: 1fr 1fr; } .grid-3 { grid-template-columns: 1fr; } }
+    @media (max-width: 1024px) { .grid-4, .grid-5 { grid-template-columns: 1fr 1fr; } .grid-3 { grid-template-columns: 1fr; } }
     @media (max-width: 640px) {
-      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: 1fr; }
       .main-wrapper { padding: 0.4rem; }
       .card { padding: 0.75rem; margin-bottom: 0.5rem; }
       .top-navbar { padding: 0.5rem 0.75rem; }
@@ -123,10 +124,12 @@
     .kpi-card.emerald::before { background: var(--accent-emerald); }
     .kpi-card.amber::before { background: var(--accent-amber); }
     .kpi-card.rose::before { background: var(--accent-rose); }
+    .kpi-card.purple::before { background: var(--accent-purple); }
     .kpi-icon { width: 48px; height: 48px; border-radius: var(--radius-md); background: #eff6ff; color: var(--accent-blue); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
     .kpi-card.emerald .kpi-icon { background: #d1fae5; color: var(--accent-emerald); }
     .kpi-card.amber .kpi-icon { background: #fef3c7; color: var(--accent-amber); }
     .kpi-card.rose .kpi-icon { background: #ffe4e6; color: var(--accent-rose); }
+    .kpi-card.purple .kpi-icon { background: #f3e8ff; color: var(--accent-purple); }
 
     .kpi-val { font-size: 1.6rem; font-weight: 900; line-height: 1.2; color: #1e293b; }
     .kpi-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.1rem; }
@@ -378,9 +381,58 @@
               <button type="button" class="btn btn-emerald btn-block" id="btn-prework-submit"><i class="ri-check-double-line"></i> 점검 완료 및 근무 시작 기록</button>
             </div>
 
+            <div id="change-point-card" class="card mb-3">
+              <div class="card-header">
+                <div class="card-title"><i class="ri-alert-line"></i> 2. 4M 변동점 체크리스트</div>
+              </div>
+              <div class="card-body" style="padding:1rem;">
+                <div class="mb-3" style="font-size:0.85rem;color:var(--text-secondary);">작업 전 또는 작업 도중 변동사항이 발생하면 체크하고 발생 시간을 기록해 주세요.</div>
+                <div class="form-group" id="change-point-list">
+                  <div style="margin-bottom:0.5rem;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <label class="checkbox-label" style="cursor:pointer;flex:1;"><input type="checkbox" name="cp_item" value="신입/대체 작업자 투입 (Man)" /> 신입/대체 작업자 투입 (Man)</label>
+                      <input type="time" name="cp_time" class="form-control" style="width:110px;display:none;padding:0.2rem 0.5rem;" />
+                      <input type="text" name="cp_detail" class="form-control" style="width:140px;display:none;padding:0.2rem 0.5rem;margin-left:0.5rem;" placeholder="상세내용(선택)" />
+                    </div>
+                  </div>
+                  <div style="margin-bottom:0.5rem;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <label class="checkbox-label" style="cursor:pointer;flex:1;"><input type="checkbox" name="cp_item" value="설비 세팅/조건 변경 (Machine)" /> 설비 세팅/조건 변경 (Machine)</label>
+                      <input type="time" name="cp_time" class="form-control" style="width:110px;display:none;padding:0.2rem 0.5rem;" />
+                      <input type="text" name="cp_detail" class="form-control" style="width:140px;display:none;padding:0.2rem 0.5rem;margin-left:0.5rem;" placeholder="상세내용(선택)" />
+                    </div>
+                  </div>
+                  <div style="margin-bottom:0.5rem;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <label class="checkbox-label" style="cursor:pointer;flex:1;"><input type="checkbox" name="cp_item" value="금형 및 주요 소모품 교체 (Machine)" /> 금형 및 주요 소모품 교체 (Machine)</label>
+                      <input type="time" name="cp_time" class="form-control" style="width:110px;display:none;padding:0.2rem 0.5rem;" />
+                      <input type="text" name="cp_detail" class="form-control" style="width:140px;display:none;padding:0.2rem 0.5rem;margin-left:0.5rem;" placeholder="상세내용(선택)" />
+                    </div>
+                  </div>
+                  <div style="margin-bottom:0.5rem;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <label class="checkbox-label" style="cursor:pointer;flex:1;"><input type="checkbox" name="cp_item" value="자재 LOT 번호 변경 (Material)" /> 자재 LOT 번호 변경 (Material)</label>
+                      <input type="time" name="cp_time" class="form-control" style="width:110px;display:none;padding:0.2rem 0.5rem;" />
+                      <input type="text" name="cp_detail" class="form-control" style="width:140px;display:none;padding:0.2rem 0.5rem;margin-left:0.5rem;" placeholder="상세내용(선택)" />
+                    </div>
+                  </div>
+                  <div style="margin-bottom:0.5rem;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <label class="checkbox-label" style="cursor:pointer;flex:1;"><input type="checkbox" name="cp_item" value="새로운 작업표준(SOP) 적용 (Method)" /> 새로운 작업표준(SOP) 적용 (Method)</label>
+                      <input type="time" name="cp_time" class="form-control" style="width:110px;display:none;padding:0.2rem 0.5rem;" />
+                      <input type="text" name="cp_detail" class="form-control" style="width:140px;display:none;padding:0.2rem 0.5rem;margin-left:0.5rem;" placeholder="상세내용(선택)" />
+                    </div>
+                  </div>
+                  <div style="margin-bottom:0.5rem;padding:0.75rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;">
+                    <label class="checkbox-label" style="cursor:pointer;display:block;"><input type="checkbox" name="cp_item" id="cp_none" value="해당 없음 (평소와 동일)" /> 해당 없음 (평소와 동일)</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div id="prod-qty-card" class="card mb-3">
               <div class="card-header">
-                <div class="card-title"><i class="ri-file-edit-line"></i> 2. 공통 생산 수량 입력</div>
+                <div class="card-title"><i class="ri-file-edit-line"></i> 3. 공통 생산 수량 입력</div>
                 <span class="badge badge-amber" id="log-status-badge">작성 중</span>
               </div>
               <div id="log-locked-notice" style="display:none;" class="mb-3" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.4);border-radius:var(--radius-sm);padding:0.75rem;">
@@ -1154,7 +1206,7 @@
 
             <div id="default-prod-card" class="card mb-3">
               <div class="card-header">
-                <div class="card-title"><i class="ri-alarm-warning-line"></i> 3. 특이사항(비가동) 기록</div>
+                <div class="card-title"><i class="ri-alarm-warning-line"></i> 4. 특이사항(비가동) 기록</div>
               </div>
 
               <div class="form-group mb-3 mt-2">
@@ -1259,13 +1311,13 @@
 
             <div class="card mb-3">
               <div class="card-header">
-                <div class="card-title"><i class="ri-history-line"></i> 4. 나의 작업일지 제출 이력</div>
+                <div class="card-title"><i class="ri-history-line"></i> 5. 나의 작업일지 제출 이력</div>
                 <button type="button" class="btn btn-outline btn-sm" id="btn-refresh-history"><i class="ri-refresh-line"></i> 새로고침</button>
               </div>
               <div class="table-responsive">
                 <table class="data-table">
                   <thead>
-                    <tr><th>일자</th><th>차종/부품/공정</th><th>생산량</th><th>불량</th><th>불량률</th><th>특이사항</th><th>상태</th></tr>
+                    <tr><th>일자</th><th>차종/부품/공정</th><th>생산량</th><th>불량</th><th>불량률</th><th>변동점</th><th>특이사항</th><th>상태</th></tr>
                   </thead>
                   <tbody id="tbl-my-history"></tbody>
                 </table>
@@ -1350,7 +1402,7 @@
           </div>
         </div>
 
-        <div class="grid-4 mb-3">
+        <div class="grid-5 mb-3">
           <div class="kpi-card">
             <div class="kpi-icon"><i class="ri-file-list-3-line"></i></div>
             <div>
@@ -1377,6 +1429,13 @@
             <div>
               <div class="kpi-val" id="kpi-downtime-count">0</div>
               <div class="kpi-label">당일 긴급 / 특이사항 발생 건수</div>
+            </div>
+          </div>
+          <div class="kpi-card purple">
+            <div class="kpi-icon"><i class="ri-alert-line"></i></div>
+            <div>
+              <div class="kpi-val" id="kpi-cp-count">0</div>
+              <div class="kpi-label">4M 변동점 발생 건수</div>
             </div>
           </div>
         </div>
@@ -1423,6 +1482,7 @@
                   <th class="sortable" data-sort="defectQty">불량수량 <i class="ri-arrow-up-down-line"></i></th>
                   <th class="sortable" data-sort="achieveRate">달성률 <i class="ri-arrow-up-down-line"></i></th>
                   <th class="sortable" data-sort="defectRate">불량률 <i class="ri-arrow-up-down-line"></i></th>
+                  <th>변동점</th>
                   <th>특이사항</th>
                   <th>상세보기</th>
                 </tr>
@@ -1475,6 +1535,7 @@
                   <th>생산량</th>
                   <th>불량</th>
                   <th>불량률</th>
+                  <th>변동점</th>
                   <th>특이사항</th>
                   <th>상태</th>
                 </tr>
@@ -1987,6 +2048,95 @@ class WorkerManager {
     container.querySelector('#btn-save-draft')?.addEventListener('click', () => this._saveLog(container, 'DRAFT'));
     container.querySelector('#btn-submit-final')?.addEventListener('click', () => this._saveLog(container, 'SUBMITTED'));
     container.querySelector('#btn-refresh-history')?.addEventListener('click', () => this._renderHistory(container));
+
+    const cpNone = container.querySelector('#cp_none');
+    const cpItems = container.querySelectorAll('input[name="cp_item"]:not(#cp_none)');
+    if (cpNone) {
+      cpNone.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          cpItems.forEach(cb => {
+            cb.checked = false;
+            const timeInput = cb.closest('div').querySelector('input[name="cp_time"]');
+            const detailInput = cb.closest('div').querySelector('input[name="cp_detail"]');
+            if(timeInput) timeInput.style.display = 'none';
+            if(detailInput) detailInput.style.display = 'none';
+          });
+        }
+      });
+    }
+    cpItems.forEach(item => {
+      item.addEventListener('change', (e) => {
+        const timeInput = e.target.closest('div').querySelector('input[name="cp_time"]');
+        const detailInput = e.target.closest('div').querySelector('input[name="cp_detail"]');
+        if (e.target.checked) {
+          if (cpNone) cpNone.checked = false;
+          if (timeInput) {
+            timeInput.style.display = 'block';
+            if (!timeInput.value) {
+              const now = new Date();
+              timeInput.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            }
+          }
+          if (detailInput) detailInput.style.display = 'block';
+        } else {
+          if (timeInput) timeInput.style.display = 'none';
+          if (detailInput) detailInput.style.display = 'none';
+        }
+      });
+    });
+
+    const checkLotChange = () => {
+      let lotChanged = false;
+      const cInit = container.querySelector('#clip-single-lot-init')?.value.trim();
+      const cMid = container.querySelector('#clip-single-lot-mid')?.value.trim();
+      const cFin = container.querySelector('#clip-single-lot-fin')?.value.trim();
+      const cArr = [cInit, cMid, cFin].filter(v => v);
+      if (new Set(cArr).size > 1) lotChanged = true;
+
+      ['a','b','c','d'].forEach(col => {
+        const pEarly = container.querySelector(`#pack-lot-early-${col}`)?.value.trim();
+        const pMid = container.querySelector(`#pack-lot-mid-${col}`)?.value.trim();
+        const pLate = container.querySelector(`#pack-lot-late-${col}`)?.value.trim();
+        const pArr = [pEarly, pMid, pLate].filter(v => v);
+        if (new Set(pArr).size > 1) lotChanged = true;
+      });
+
+      if (lotChanged) {
+        const matCb = Array.from(container.querySelectorAll('input[name="cp_item"]')).find(cb => cb.value.includes('Material'));
+        if (matCb && !matCb.checked) {
+          matCb.click();
+        }
+        if (matCb && matCb.checked) {
+          const detailInput = matCb.closest('div').querySelector('input[name="cp_detail"]');
+          if (detailInput) {
+            if (new Set(cArr).size > 1) {
+              detailInput.value = cArr.join(' -> ');
+            } else {
+              let packStr = [];
+              ['a','b','c','d'].forEach(col => {
+                const pEarly = container.querySelector(`#pack-lot-early-${col}`)?.value.trim();
+                const pMid = container.querySelector(`#pack-lot-mid-${col}`)?.value.trim();
+                const pLate = container.querySelector(`#pack-lot-late-${col}`)?.value.trim();
+                const pArr = [pEarly, pMid, pLate].filter(v => v);
+                if (new Set(pArr).size > 1) packStr.push(`${col.toUpperCase()}(${pArr.join('->')})`);
+              });
+              if (packStr.length > 0) detailInput.value = packStr.join(', ');
+            }
+          }
+        }
+      }
+    };
+
+    const lotInputs = container.querySelectorAll([
+      '#clip-single-lot-init', '#clip-single-lot-mid', '#clip-single-lot-fin',
+      '#pack-lot-early-a', '#pack-lot-mid-a', '#pack-lot-late-a',
+      '#pack-lot-early-b', '#pack-lot-mid-b', '#pack-lot-late-b',
+      '#pack-lot-early-c', '#pack-lot-mid-c', '#pack-lot-late-c',
+      '#pack-lot-early-d', '#pack-lot-mid-d', '#pack-lot-late-d'
+    ].join(','));
+    lotInputs.forEach(inp => {
+      inp?.addEventListener('input', checkLotChange);
+    });
 
     const photoInput = container.querySelector('#prod-photo-upload');
     if (photoInput) {
@@ -2672,6 +2822,33 @@ class WorkerManager {
     container.querySelector('#prod-defect').value = log.defectQuantity || 0;
     container.querySelector('#prod-note').value = log.note || '';
 
+    const cps = log.changePoints || [];
+    container.querySelectorAll('input[name="cp_item"]').forEach(cb => {
+      const matched = cps.find(cp => cp === cb.value || cp.includes(cb.value));
+      if (matched) {
+        cb.checked = true;
+        const timeInput = cb.closest('div').querySelector('input[name="cp_time"]');
+        const detailInput = cb.closest('div').querySelector('input[name="cp_detail"]');
+        if (timeInput) {
+          timeInput.style.display = 'block';
+          const matchTime = matched.match(/^\[(.*?)\]/);
+          if (matchTime) timeInput.value = matchTime[1];
+        }
+        if (detailInput) {
+          detailInput.style.display = 'block';
+          const matchDetail = matched.split(' - ');
+          if (matchDetail.length > 1) {
+            detailInput.value = matchDetail.slice(1).join(' - ');
+          }
+        }
+      } else {
+        cb.checked = false;
+        const timeInput = cb.closest('div').querySelector('input[name="cp_time"]');
+        const detailInput = cb.closest('div').querySelector('input[name="cp_detail"]');
+        if (timeInput) timeInput.style.display = 'none';
+        if (detailInput) detailInput.style.display = 'none';
+      }
+    });
     const photoPreviewContainer = container.querySelector('#photo-preview-container');
     const photoImg = container.querySelector('#photo-preview-img');
     if (log.photoUrl) {
@@ -2952,6 +3129,16 @@ class WorkerManager {
     const defectDetails = {};
     const hasSpecialEvent = container.querySelector('#chk-has-special-event').checked;
     const note = container.querySelector('#prod-note').value;
+    
+    const changePoints = Array.from(container.querySelectorAll('input[name="cp_item"]:checked')).map(cb => {
+      if (cb.value === '해당 없음 (평소와 동일)') return cb.value;
+      const tInput = cb.closest('div').querySelector('input[name="cp_time"]');
+      const dInput = cb.closest('div').querySelector('input[name="cp_detail"]');
+      const t = tInput && tInput.value ? `[${tInput.value}] ` : '';
+      const d = dInput && dInput.value ? ` - ${dInput.value}` : '';
+      return t + cb.value + d;
+    });
+
 
     let isEmergency = false;
     if (this.currentLog.specialEvents && this.currentLog.specialEvents.length > 0) {
@@ -3178,7 +3365,7 @@ class WorkerManager {
     Object.assign(this.currentLog, {
       timeStart, timeEnd, plannedQuantity,
       totalQuantity: total, defectQuantity: defect, passQuantity: Math.max(0, total - defect),
-      defectDetails, hasSpecialEvent, note, status, isEmergency,
+      defectDetails, hasSpecialEvent, note, status, isEmergency, changePoints,
       clipData, prepData, jointData, postData, packData
     });
     store.updateLog(this.currentLog);
@@ -3216,6 +3403,7 @@ class WorkerManager {
         <td>${l.totalQuantity.toLocaleString()}</td>
         <td style="color:var(--accent-rose);">${l.defectQuantity.toLocaleString()}</td>
         <td>${rate}%</td>
+        <td>${(l.changePoints && l.changePoints.length && !l.changePoints.includes('해당 없음 (평소와 동일)')) ? '<span class="badge badge-purple" title="' + l.changePoints.join(', ') + '">변경(' + l.changePoints.length + ')</span>' : '-'}</td>
         <td>${l.hasEmergency ? '<span class="badge badge-rose">🚨긴급</span>' : (l.hasSpecialEvent ? '<span class="badge badge-amber">⚠️특이사항</span>' : '-')}</td>
         <td style="display:flex; align-items:center; gap:0.5rem;">
           ${l.status === 'SUBMITTED' ? '<span class="badge badge-emerald">✅제출</span>' : '<span class="badge badge-amber">✍️작성중</span>'}
@@ -3473,11 +3661,13 @@ class ManagerDashboard {
     const totalDefect = logs.reduce((a, b) => a + (b.defectQuantity || 0), 0);
     const rate = totalProd > 0 ? ((totalDefect / totalProd) * 100).toFixed(2) : '0.00';
     const dtCount = logs.filter(l => l.hasSpecialEvent).length;
+    const cpCount = logs.filter(l => l.changePoints && l.changePoints.length > 0 && !l.changePoints.includes('해당 없음 (평소와 동일)')).length;
 
     container.querySelector('#kpi-total-logs').textContent = totalLogs;
     container.querySelector('#kpi-total-prod').textContent = totalProd.toLocaleString();
     container.querySelector('#kpi-defect-rate').textContent = `${rate}%`;
     container.querySelector('#kpi-downtime-count').textContent = dtCount;
+    if(container.querySelector('#kpi-cp-count')) container.querySelector('#kpi-cp-count').textContent = cpCount;
   }
 
   _renderCharts(container, logs) {
@@ -3718,10 +3908,11 @@ class ManagerDashboard {
           const defectRate = totalProd > 0 ? ((defectQty / totalProd) * 100).toFixed(2) : '0.00';
           const hasSe = matched.some(l => l.hasSpecialEvent);
           const hasEmergency = matched.some(l => l.isEmergency);
+          const hasCp = matched.some(l => l.changePoints && l.changePoints.length > 0 && !l.changePoints.includes('해당 없음 (평소와 동일)'));
 
           rows.push({
             modelName: model.name, partName: part.name, procName: proc.name, procId: proc.id,
-            target, totalProd, passQty, defectQty, achieveRate: parseFloat(achieveRate), defectRate: parseFloat(defectRate), hasSe, hasEmergency, logCount: matched.length
+            target, totalProd, passQty, defectQty, achieveRate: parseFloat(achieveRate), defectRate: parseFloat(defectRate), hasSe, hasEmergency, hasCp, logCount: matched.length
           });
         });
       });
@@ -3748,6 +3939,7 @@ class ManagerDashboard {
         <td style="color:var(--accent-rose);">${r.defectQty.toLocaleString()}</td>
         <td>${r.achieveRate}%</td>
         <td>${r.defectRate}%</td>
+        <td>${r.hasCp ? '<span class="badge badge-purple">4M변동</span>' : '-'}</td>
         <td>${r.hasEmergency ? '<span class="badge badge-rose">🚨긴급</span>' : (r.hasSe ? '<span class="badge badge-amber">⚠️특이사항</span>' : '-')}</td>
         <td>
           ${r.procName === '검사포장' ? 
@@ -4029,6 +4221,7 @@ class ManagerDashboard {
         <td style="font-weight:700;">${(l.totalQuantity||0).toLocaleString()}</td>
         <td style="color:var(--accent-rose);">${(l.defectQuantity||0).toLocaleString()}</td>
         <td>${rate}%</td>
+        <td>${(l.changePoints && l.changePoints.length && !l.changePoints.includes('해당 없음 (평소와 동일)')) ? '<span class="badge badge-purple" title="' + l.changePoints.join(', ') + '">변경(' + l.changePoints.length + ')</span>' : '-'}</td>
         <td>${l.hasEmergency ? '<span class="badge badge-rose">🚨긴급</span>' : (l.hasSpecialEvent ? '<span class="badge badge-amber">⚠️특이사항</span>' : '-')}</td>
         <td>
           ${l.status==='SUBMITTED' ? '<span class="badge badge-emerald">✅제출</span>' : '<span class="badge badge-amber">✍️작성중</span>'}
@@ -4107,10 +4300,11 @@ class ManagerDashboard {
   }
 
   _exportCSV() {
-    let csv = "\\uFEFF일자,작업자,생년월일,차종,부품,공정,근무시작,총생산량,양품,불량,불량률,특이사항여부,긴급여부,비고,상태\\n";
+    let csv = "\\uFEFF일자,작업자,생년월일,차종,부품,공정,근무시작,총생산량,양품,불량,불량률,변동점,특이사항여부,긴급여부,비고,상태\\n";
     this._getFiltered().forEach(l => {
       const rate = l.totalQuantity > 0 ? ((l.defectQuantity / l.totalQuantity) * 100).toFixed(2) : '0.00';
-      csv += `"${l.date}","${l.workerName}","${l.birthDate||''}","${l.modelName}","${l.partName}","${l.processName}","${l.clockInTime||''}","${l.totalQuantity}","${l.passQuantity}","${l.defectQuantity}","${rate}%","${l.hasSpecialEvent?'Y':'N'}","${l.isEmergency?'Y':'N'}","${l.note||''}","${l.status}"\\n`;
+      const cpStr = (l.changePoints || []).join(', ');
+      csv += `"${l.date}","${l.workerName}","${l.birthDate||''}","${l.modelName}","${l.partName}","${l.processName}","${l.clockInTime||''}","${l.totalQuantity}","${l.passQuantity}","${l.defectQuantity}","${rate}%","${cpStr}","${l.hasSpecialEvent?'Y':'N'}","${l.isEmergency?'Y':'N'}","${l.note||''}","${l.status}"\\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
