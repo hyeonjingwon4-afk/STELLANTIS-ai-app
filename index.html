@@ -1302,7 +1302,14 @@
               <h2 style="font-size:1.45rem;font-weight:900;color:#ffffff;margin-top:0.25rem;">스텔란티스 생산량 &amp; 불량률 모니터링</h2>
             </div>
             <div style="display:flex;align-items:center;gap:0.6rem;">
+              <select class="form-control" id="mgr-period-type" style="width:auto;background:#0f172a;color:#ffffff;">
+                <option value="daily">일간 (Daily)</option>
+                <option value="weekly">주간 (Weekly)</option>
+                <option value="monthly">월간 (Monthly)</option>
+              </select>
               <input type="date" class="form-control" id="mgr-date" style="width:auto;background:#0f172a;color:#ffffff;" />
+              <input type="week" class="form-control" id="mgr-week" style="width:auto;background:#0f172a;color:#ffffff;display:none;" />
+              <input type="month" class="form-control" id="mgr-month" style="width:auto;background:#0f172a;color:#ffffff;display:none;" />
               <button type="button" class="btn btn-primary btn-sm" id="btn-qr-open"><i class="ri-qr-code-line"></i> QR 접속코드</button>
               <button type="button" class="btn btn-outline btn-sm" id="btn-csv"><i class="ri-download-2-line"></i> CSV 엑셀 다운로드</button>
             </div>
@@ -1383,6 +1390,11 @@
             <div class="card-header"><div class="card-title"><i class="ri-pie-chart-line"></i> 주요 불량 유형 분포</div></div>
             <div style="height:240px;"><canvas id="chart-defect"></canvas></div>
           </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header"><div class="card-title"><i class="ri-line-chart-line"></i> 생산량 및 불량률 변동 추이 (Trend)</div></div>
+          <div style="height:280px;"><canvas id="chart-trend"></canvas></div>
         </div>
 
         <div class="card mb-3">
@@ -3317,14 +3329,25 @@ class WorkerManager {
 class ManagerDashboard {
   constructor() {
     this.selDate = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+    const pastDaysOfYear = (today - firstDayOfYear) / 86400000;
+    const weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+    this.selWeek = `${today.getFullYear()}-W${weekNum.toString().padStart(2, '0')}`;
+    this.selMonth = this.selDate.substring(0, 7);
+    this.periodType = 'daily';
+
     this.chartProd = null;
     this.chartDefect = null;
+    this.chartTrend = null;
     this.sortCol = null;
     this.sortDesc = true;
   }
 
   render(container) {
     container.querySelector('#mgr-date').value = this.selDate;
+    container.querySelector('#mgr-week').value = this.selWeek;
+    container.querySelector('#mgr-month').value = this.selMonth;
     this._bindEvents(container);
     this.refresh(container);
   }
@@ -3340,7 +3363,23 @@ class ManagerDashboard {
   }
 
   _bindEvents(container) {
-    container.querySelector('#mgr-date').addEventListener('change', e => { this.selDate = e.target.value; this.refresh(container); });
+    const periodTypeEl = container.querySelector('#mgr-period-type');
+    const dateEl = container.querySelector('#mgr-date');
+    const weekEl = container.querySelector('#mgr-week');
+    const monthEl = container.querySelector('#mgr-month');
+
+    periodTypeEl.addEventListener('change', (e) => {
+      this.periodType = e.target.value;
+      dateEl.style.display = this.periodType === 'daily' ? 'block' : 'none';
+      weekEl.style.display = this.periodType === 'weekly' ? 'block' : 'none';
+      monthEl.style.display = this.periodType === 'monthly' ? 'block' : 'none';
+      this.refresh(container);
+    });
+
+    dateEl.addEventListener('change', e => { this.selDate = e.target.value; this.refresh(container); });
+    weekEl.addEventListener('change', e => { this.selWeek = e.target.value; this.refresh(container); });
+    monthEl.addEventListener('change', e => { this.selMonth = e.target.value; this.refresh(container); });
+
     container.querySelector('#mgr-filter-model').addEventListener('change', () => this.refresh(container));
     container.querySelector('#mgr-filter-process')?.addEventListener('change', () => this.refresh(container));
     container.querySelector('#btn-mgr-search')?.addEventListener('click', () => this.refresh(container));
@@ -3392,8 +3431,24 @@ class ManagerDashboard {
     document.querySelector('#btn-close-proc-detail-modal-2').addEventListener('click', () => document.querySelector('#modal-process-detail-logs').classList.remove('open'));
   }
 
+  _getWeekString(d) {
+    const today = new Date(d);
+    const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+    const pastDaysOfYear = (today - firstDayOfYear) / 86400000;
+    const weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+    return `${today.getFullYear()}-W${weekNum.toString().padStart(2, '0')}`;
+  }
+
   _getFiltered() {
-    let logs = store.getLogs().filter(l => l.date === this.selDate);
+    let logs = store.getLogs();
+
+    if (this.periodType === 'daily') {
+      logs = logs.filter(l => l.date === this.selDate);
+    } else if (this.periodType === 'weekly') {
+      logs = logs.filter(l => l.date && this._getWeekString(l.date) === this.selWeek);
+    } else if (this.periodType === 'monthly') {
+      logs = logs.filter(l => l.date && l.date.substring(0, 7) === this.selMonth);
+    }
     
     const mModel = document.querySelector('#mgr-filter-model')?.value;
     const mProc = document.querySelector('#mgr-filter-process')?.value;
@@ -3574,6 +3629,68 @@ class ManagerDashboard {
               }
             }
           }
+        }
+      }
+    });
+
+    const ctxTrend = container.querySelector('#chart-trend').getContext('2d');
+    const trendMap = {};
+    
+    // Build trend data from logs
+    logs.forEach(l => {
+      let key = '';
+      if (this.periodType === 'daily') {
+        key = l.clockInTime ? l.clockInTime.substring(0, 5) : '기타'; // hourly for daily view
+      } else if (this.periodType === 'weekly') {
+        key = l.date || '기타'; // daily for weekly view
+      } else {
+        key = l.date || '기타'; // daily for monthly view
+      }
+      
+      if (!trendMap[key]) trendMap[key] = { prod: 0, def: 0 };
+      trendMap[key].prod += (l.totalQuantity || 0);
+      trendMap[key].def += (l.defectQuantity || 0);
+    });
+
+    const sortedKeys = Object.keys(trendMap).sort();
+    const tProdData = sortedKeys.map(k => trendMap[k].prod);
+    const tRates = sortedKeys.map(k => trendMap[k].prod > 0 ? ((trendMap[k].def / trendMap[k].prod) * 100).toFixed(1) : 0);
+
+    if (this.chartTrend) this.chartTrend.destroy();
+    this.chartTrend = new Chart(ctxTrend, {
+      type: 'line',
+      data: {
+        labels: sortedKeys,
+        datasets: [
+          {
+            label: '총 생산량 (EA)',
+            data: tProdData,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true,
+            tension: 0.2,
+            yAxisID: 'y'
+          },
+          {
+            label: '불량률 (%)',
+            data: tRates,
+            borderColor: '#ef4444',
+            backgroundColor: '#ef4444',
+            borderDash: [5, 5],
+            tension: 0.2,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: true, position: 'top' } },
+        scales: {
+          x: { display: true },
+          y: { type: 'linear', display: true, position: 'left', title: { display: true, text: '생산량 (EA)' }, min: 0 },
+          y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: '불량률 (%)' }, grid: { drawOnChartArea: false }, min: 0 }
         }
       }
     });
